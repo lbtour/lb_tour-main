@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "353547129400",
+    "project_id": "lobo-tour",
+    "storage_bucket": "lobo-tour.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353547129400:android:9883e7a44114360106cccd",
+        "android_client_info": {
+          "package_name": "com.example.lb_tour"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnp9rTd4KAkjpzQQMsV_NMQUAJltkjShA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
