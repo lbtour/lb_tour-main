@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:lb_tour/screens/account/account.dart';
 import 'package:lb_tour/screens/discover/discover.dart';
 import 'package:lb_tour/screens/home/home.dart';
 import 'package:lb_tour/screens/home/notification.dart';
@@ -37,7 +38,7 @@ class TabNavigation extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: DefaultTabController(
-        length: 4,
+        length: 5,
         child: Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.transparent,
@@ -129,6 +130,7 @@ class TabNavigation extends StatelessWidget {
               DiscoverScreen(),
               WeatherScreen(),
               LikesScreen(),
+              AccountPage(),
             ],
           ),
           bottomNavigationBar: Theme(
@@ -182,6 +184,14 @@ class TabNavigation extends StatelessWidget {
                       size: 24.0,
                     ),
                     text: 'Likes',
+                  ),
+                  Tab(
+                    icon: HugeIcon(
+                      icon: Icons.person_3,
+                      color: Colors.black,
+                      size: 24.0,
+                    ),
+                    text: 'Account',
                   ),
                 ],
               ),

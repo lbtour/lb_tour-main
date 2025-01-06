@@ -1,9 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:lb_tour/common/navigation-tab.dart';
+import 'package:lb_tour/navigation-tab.dart';
+import 'package:lb_tour/repository/authentication_repository.dart';
 import 'package:lb_tour/screens/authentication/forgot-password.dart';
 import 'package:lb_tour/screens/authentication/register.dart';
 
@@ -15,11 +15,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-
+  bool _isPasswordVisible = false;
   var height, width;
 
   @override
@@ -28,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     width = MediaQuery.of(context).size.width;
     return SafeArea(
       child: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -47,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  _header(context) {
+  Widget _header(BuildContext context) {
     return Column(
       children: [
         Image.asset(
@@ -72,8 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
-
-  bool _isPasswordVisible = false;
 
   Widget _inputField(BuildContext context) {
     return Column(
@@ -136,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: _isLoading ? null : _loginUser,
           style: ElevatedButton.styleFrom(
             foregroundColor: Colors.white,
-            backgroundColor: const Color.fromARGB(255, 14, 86, 170).withOpacity(0.8),
+            backgroundColor: Colors.blueAccent,
             minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -145,18 +142,37 @@ class _LoginScreenState extends State<LoginScreen> {
           child: _isLoading
               ? const CircularProgressIndicator(color: Colors.white)
               : Text(
-                  "Login",
-                  style: GoogleFonts.comfortaa(
-                    color: Colors.white,
-                  ),
-                ),
+            "Login",
+            style: GoogleFonts.comfortaa(
+              color: Colors.white,
+            ),
+          ),
         ),
         const SizedBox(height: 30),
       ],
     );
   }
 
-  _forgotPassword(context) {
+  void _loginUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+    final authRepo = AuthenticationRepository.instance;
+
+    try {
+      await authRepo.loginUser(
+        email: _emailController.text,
+        password: _passwordController.text,
+        context: context,
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Widget _forgotPassword(BuildContext context) {
     return TextButton(
       onPressed: () {
         Navigator.push(
@@ -174,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  _signup(context) {
+  Widget _signup(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -202,49 +218,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ],
     );
-  }
-
-  Future<void> _loginUser() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      // Check if the user's email is verified
-      if (userCredential.user!.emailVerified) {
-        // Navigate to the main app if email is verified
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => TabNavigation()),
-        );
-      } else {
-        // Sign out the user if email is not verified
-        await _auth.signOut();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Center(
-              child: Text(
-                'Email not verified. Please check your inbox to verify your email.',
-              ),
-            ),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'Login failed')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 }
