@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:lb_tour/navigation-tab.dart';
 import 'package:lb_tour/repository/authentication_repository.dart';
 import 'package:lb_tour/screens/authentication/forgot-password.dart';
 import 'package:lb_tour/screens/authentication/register.dart';

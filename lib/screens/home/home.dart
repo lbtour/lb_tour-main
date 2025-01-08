@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:lb_tour/pop_up/homescreen/pick_tourist_spot_popup.dart';
 import 'package:lb_tour/screens/discover/booking.dart';
 import 'package:lb_tour/screens/discover/discover.dart';
 
@@ -110,6 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Positioned(
+
                         bottom: 0,
                         left: 0,
                         right: 0,
@@ -123,64 +125,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.white),
                             ),
                             const SizedBox(height: 10),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: Card(
-                                elevation: 6,
-                                child: Column(
-                                  children: [
-                                    TextField(
-                                      controller: searchController,
-                                      decoration: InputDecoration(
-                                        hintText: 'Search here',
-                                        hintStyle: GoogleFonts.comfortaa(),
-                                        prefixIcon: const HugeIcon(
-                                          icon:
-                                              HugeIcons.strokeRoundedLocation04,
-                                          color: Colors.grey,
-                                          size: 24.0,
+                            GestureDetector(
+                              onTap: () {
+                                // Call the function to show the tourist spot picker
+                                TouristSpotPicker.show(context);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.all(10),
+                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
+                                child: Card(
+                                  elevation: 6,
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(),
+                                        height: 50,
+                                        width: double.infinity,
+                                        child: Center(
+                                          child: Text(
+                                            "Pick Tourist Spot",
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                            ),
+                                          ),
                                         ),
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        suffixIcon: const HugeIcon(
-                                          icon: HugeIcons.strokeRoundedSearch02,
-                                          color: Colors.grey,
-                                          size: 24.0,
-                                        ),
-                                        filled: true,
-                                        fillColor: Colors.white,
-                                      ),
-                                    ),
-                                    if (filteredTouristSpots.isNotEmpty &&
-                                        searchController.text.isNotEmpty)
-                                      ListView.builder(
-                                        shrinkWrap: true,
-                                        itemCount: filteredTouristSpots.length,
-                                        itemBuilder: (context, index) {
-                                          final spot =
-                                              filteredTouristSpots[index];
-                                          return ListTile(
-                                            title: Text(spot.name),
-                                            onTap: () =>
-                                                openWebView(spot.address),
-                                          );
-                                        },
-                                      ),
-                                  ],
+                                      )
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -288,3 +259,4 @@ class InAppWebViewScreen extends StatelessWidget {
     );
   }
 }
+
