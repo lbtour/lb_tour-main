@@ -124,76 +124,99 @@ class TabNavigation extends StatelessWidget {
               const SizedBox(width: 14)
             ],
           ),
-          body: const TabBarView(
+          body: TabBarView(
+
+
             children: [
               HomeScreen(),
               DiscoverScreen(),
               WeatherScreen(),
-              LikesScreen(),
+              TopRatedScreen(),
               AccountPage(),
             ],
           ),
-          bottomNavigationBar: Theme(
-            data: Theme.of(context).copyWith(
-              canvasColor: const Color.fromARGB(255, 255, 255, 255),
-              primaryColor: Colors.white,
-              textTheme: Theme.of(context).textTheme.copyWith(
-                    bodySmall: GoogleFonts.comfortaa(color: Colors.black),
-                  ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 25),
-              child: TabBar(
-                unselectedLabelColor: Colors.black,
-                labelColor: const Color.fromARGB(255, 14, 86, 170),
-                indicator: const UnderlineTabIndicator(
-                  borderSide: BorderSide(
-                      width: 2.0, color: Color.fromARGB(255, 14, 86, 170)),
-                  insets: EdgeInsets.symmetric(horizontal: 40),
+          bottomNavigationBar: Padding(
+            padding: const EdgeInsets.only(bottom: 5.0),
+            child: Container(
+              height: 60,
+              alignment: Alignment.bottomCenter,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  canvasColor: const Color.fromARGB(255, 255, 255, 255),
+                  primaryColor: Colors.white,
+                  textTheme: Theme.of(context).textTheme.copyWith(
+                        bodySmall: GoogleFonts.comfortaa(color: Colors.black),
+                      ),
                 ),
-                labelStyle: GoogleFonts.comfortaa(fontWeight: FontWeight.bold),
-                tabs: const [
-                  Tab(
-                    icon: HugeIcon(
-                      icon: HugeIcons.strokeRoundedHome13,
-                      color: Colors.black,
-                      size: 24.0,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 0),
+                  child: TabBar(
+                    padding: EdgeInsets.all(0),
+                    tabAlignment: TabAlignment.center,
+                    unselectedLabelColor: Colors.black,
+                    labelColor: const Color.fromARGB(255, 14, 86, 170),
+                    indicator: const UnderlineTabIndicator(
+                      borderSide: BorderSide(
+                          width: 2.0, color: Color.fromARGB(255, 14, 86, 170)),
+                      insets: EdgeInsets.symmetric(horizontal: 5),
                     ),
-                    text: 'Home',
+                    labelStyle: GoogleFonts.comfortaa(fontWeight: FontWeight.bold),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 10), // Adjust spacing
+                    tabs: const [
+                      Tab(
+                        icon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedHome13,
+                          color: Colors.black,
+                        ),
+                        child: Text(
+                          "Home",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ),
+                      Tab(
+                        icon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedDiscoverCircle,
+                          color: Colors.black,
+                        ),
+                        child: Text(
+                          "Discover",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ),
+                      Tab(
+                        icon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedSunCloudAngledRain02,
+                          color: Colors.black,
+                        ),
+                        child: Text(
+                          "Weather",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ),
+                      Tab(
+                        icon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedThumbsUp,
+                          color: Colors.black,
+                        ),
+                        child: Text(
+                          "Top-Rated",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ),
+                      Tab(
+                        icon: HugeIcon(
+                          icon: Icons.person_3,
+                          color: Colors.black,
+                        ),
+                        child: Text(
+                          "Account",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ],
                   ),
-                  Tab(
-                    icon: HugeIcon(
-                      icon: HugeIcons.strokeRoundedDiscoverCircle,
-                      color: Colors.black,
-                      size: 24.0,
-                    ),
-                    text: 'Discover',
-                  ),
-                  Tab(
-                    icon: HugeIcon(
-                      icon: HugeIcons.strokeRoundedSunCloudAngledRain02,
-                      color: Colors.black,
-                      size: 24.0,
-                    ),
-                    text: 'Weather',
-                  ),
-                  Tab(
-                    icon: HugeIcon(
-                      icon: HugeIcons.strokeRoundedThumbsUp,
-                      color: Colors.black,
-                      size: 24.0,
-                    ),
-                    text: 'Likes',
-                  ),
-                  Tab(
-                    icon: HugeIcon(
-                      icon: Icons.person_3,
-                      color: Colors.black,
-                      size: 24.0,
-                    ),
-                    text: 'Account',
-                  ),
-                ],
+
+                ),
               ),
             ),
           ),

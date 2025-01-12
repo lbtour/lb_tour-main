@@ -1,38 +1,40 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lb_tour/screens/account/submit_ticket_widget.dart';
 import 'package:lb_tour/screens/authentication/login.dart';
 import 'package:lb_tour/repository/authentication_repository.dart';
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+class BookingController extends GetxController {
+  // Reactive variable to track the selected booking status
+  var selectedStatus = 'Pending'.obs;
 
-  @override
-  _SplashScreenState createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    Timer(const Duration(seconds: 3), () {
-      AuthenticationRepository.instance.screenRedirect();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      body: Center(
-        child: Image.asset(
-          'assets/images/lobo-logo.png',
-          width: 200,
-          height: 200,
-        ),
-      ),
-    );
-  }
+  // Example dynamic booking data (this could come from an API in a real app)
+  final bookings = {
+    'Pending': [
+      {'title': 'Flight to New York', 'date': 'Jan 10, 2025'},
+      {'title': 'Hotel in Tokyo', 'date': 'Mar 15, 2025'},
+      {'title': 'Conference in London', 'date': 'Apr 22, 2025'},
+      {'title': 'Business Meeting in Berlin', 'date': 'May 5, 2025'},
+    ],
+    'Approved': [
+      {'title': 'Hotel Reservation', 'date': 'Feb 5, 2025'},
+    ],
+    'Finished': [
+      {'title': 'Tour in Paris', 'date': 'Dec 15, 2024'},
+    ],
+    'Cancelled': [
+      {'title': 'Cruise to Bahamas', 'date': 'Nov 20, 2024'},
+      {'title': 'Island Trip', 'date': 'Oct 10, 2024'},
+      {'title': 'Flight to Singapore', 'date': 'Sep 5, 2024'},
+      {'title': 'Hotel Stay in Dubai', 'date': 'Aug 1, 2024'},
+      {'title': 'Business Meeting in Berlin', 'date': 'Jul 25, 2024'},
+      {'title': 'Vacation in Maldives', 'date': 'Jun 15, 2024'},
+      {'title': 'Family Trip to Sydney', 'date': 'May 20, 2024'},
+      {'title': 'Road Trip in USA', 'date': 'Apr 10, 2024'},
+      {'title': 'Adventure in Iceland', 'date': 'Mar 1, 2024'},
+      {'title': 'Mountain Hike', 'date': 'Feb 10, 2024'},
+    ],
+  }.obs;
 }
 
 class AccountPage extends StatelessWidget {
@@ -40,18 +42,23 @@ class AccountPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bookingController = Get.put(BookingController());
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Account'),
-        centerTitle: true,
-      ),
+
       body: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(5.0),
         children: [
           _buildAccountDetailsSection(),
-          const SizedBox(height: 30),
-          _buildBookingsSection(),
-          const SizedBox(height: 30),
+          const SizedBox(height: 10),
+          _buildBookingStatusButtons(bookingController),
+          const SizedBox(height: 20),
+          Container(
+              height: 360,
+              child: _buildBookingListContainer(bookingController, context)),
+          const SizedBox(height: 10),
+          SubmitTicketWidget(),
+          const SizedBox(height: 10),
           _buildLogoutButton(context),
         ],
       ),
@@ -59,72 +66,131 @@ class AccountPage extends StatelessWidget {
   }
 
   Widget _buildAccountDetailsSection() {
-    return Row(
-      children: [
-        const CircleAvatar(
-          radius: 40,
-          backgroundColor: Colors.grey,
-          child: Icon(
-            Icons.person,
-            size: 40,
-            color: Colors.white,
+    return Padding(
+      padding: const EdgeInsets.only(left: 10.0, right: 10),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 40,
+            backgroundColor: Colors.grey,
+            child: Icon(
+              Icons.person,
+              size: 40,
+              color: Colors.white,
+            ),
           ),
-        ),
-        const SizedBox(width: 20),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'John Doe',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+          const SizedBox(width: 20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'John Doe',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'john.doe@example.com',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+              SizedBox(height: 8),
+              Text(
+                'john.doe@example.com',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookingStatusButtons(BookingController controller) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _statusButton(controller, 'Pending'),
+        _statusButton(controller, 'Approved'),
+        _statusButton(controller, 'Finished'),
+        _statusButton(controller, 'Cancelled'),
       ],
     );
   }
 
-  Widget _buildBookingsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Your Bookings',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
+  Widget _statusButton(BookingController controller, String status) {
+    return Obx(() {
+      return Container(
+        padding: EdgeInsets.all(5),
+        width: 100,
+        child: ElevatedButton(
+          onPressed: () {
+            controller.selectedStatus.value = status;
+          },
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.all(0),
+            backgroundColor: controller.selectedStatus.value == status
+                ? Colors.blue
+                : Colors.grey,
+          ),
+          child: Text(
+            status,
+            style: TextStyle(fontSize: 14, color: Colors.white),
           ),
         ),
-        const SizedBox(height: 10),
-        ListTile(
-          leading: const Icon(Icons.flight_takeoff),
-          title: const Text('Flight to New York'),
-          subtitle: const Text('Jan 10, 2025 - Confirmed'),
-          onTap: () {
-            // Navigate to Booking Details
-          },
+      );
+    });
+  }
+
+  Widget _buildBookingListContainer(BookingController controller, BuildContext context) {
+    return Obx(() {
+      final bookings = controller.bookings[controller.selectedStatus.value] ?? [];
+      final limitedBookings = bookings.take(4).toList();
+      return Padding(
+        padding: const EdgeInsets.only(left: 10.0, right: 10.0),
+        child: Container(
+          padding: const EdgeInsets.all(10.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.3),
+                blurRadius: 5,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              if (bookings.isEmpty)
+                const Center(
+                  child: Text(
+                    'No bookings available.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                )
+              else ...limitedBookings.map((booking) {
+                return ListTile(
+                  leading: const Icon(Icons.calendar_today),
+                  title: Text(booking['title']!),
+                  subtitle: Text(booking['date']!),
+                );
+              }).toList(),
+              if (bookings.length > 4)
+                TextButton(
+                  onPressed: () {
+                    Get.to(() => AllBookingsPage(
+                      title: controller.selectedStatus.value,
+                      bookings: bookings,
+                    ));
+                  },
+                  child: const Text('View All'),
+                ),
+            ],
+          ),
         ),
-        ListTile(
-          leading: const Icon(Icons.hotel),
-          title: const Text('Hotel Reservation'),
-          subtitle: const Text('Feb 5, 2025 - Pending'),
-          onTap: () {
-            // Navigate to Booking Details
-          },
-        ),
-      ],
-    );
+      );
+    });
   }
 
   Widget _buildLogoutButton(BuildContext context) {
@@ -132,8 +198,7 @@ class AccountPage extends StatelessWidget {
       child: ElevatedButton(
         onPressed: () {
           AuthenticationRepository.instance.logout();
-          Get.offAll(() => const LoginScreen(),
-          );
+          Get.offAll(() => const LoginScreen());
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.redAccent,
@@ -146,6 +211,39 @@ class AccountPage extends StatelessWidget {
             fontSize: 18,
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+class AllBookingsPage extends StatelessWidget {
+  final String title;
+  final List<Map<String, String>> bookings;
+
+  const AllBookingsPage({
+    required this.title,
+    required this.bookings,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('$title Bookings'),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(10.0),
+        itemCount: bookings.length,
+        itemBuilder: (context, index) {
+          final booking = bookings[index];
+          return ListTile(
+            leading: const Icon(Icons.calendar_today),
+            title: Text(booking['title']!),
+            subtitle: Text(booking['date']!),
+          );
+        },
       ),
     );
   }

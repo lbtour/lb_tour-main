@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lb_tour/screens/discover/booking.dart';
 
+import '../../models/tourist_spot/tourist_spot_model.dart';
+
 class Activity {
   final String title;
   final String image;
@@ -19,43 +21,6 @@ class Activity {
     );
   }
 }
-
-class TouristSpot {
-  final String name;
-  final String imageUrl;
-  final String price;
-  final String description;
-  final String address;
-  final List<Activity> activities; // Updated to use the `Activity` class
-  final List<String> virtualImages;
-
-  TouristSpot({
-    required this.name,
-    required this.imageUrl,
-    required this.price,
-    required this.description,
-    required this.address,
-    required this.activities, // Updated for activities
-    required this.virtualImages,
-  });
-
-  factory TouristSpot.fromMap(Map<dynamic, dynamic> map) {
-    return TouristSpot(
-      name: map['touristName'] ?? '',
-      imageUrl: map['imageUrl'] ?? '',
-      price: map['price'] ?? '',
-      description: map['description'] ?? '',
-      address: map['location'] ?? '', // Adjusted for `location`
-      activities: map['activities'] != null
-          ? (map['activities'] as List<dynamic>)
-              .map((activity) => Activity.fromMap(activity))
-              .toList()
-          : [],
-      virtualImages: List<String>.from(map['virtualImages'] ?? []),
-    );
-  }
-}
-
 
 
 class DiscoverScreen extends StatefulWidget {
@@ -76,15 +41,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   Future<void> fetchTouristSpots() async {
     DatabaseReference databaseRef =
-        FirebaseDatabase.instance.ref().child('TouristSpot');
+    FirebaseDatabase.instance.ref().child('TouristSpot');
 
-    databaseRef.once().then((DatabaseEvent event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>;
-      setState(() {
-        touristSpots = data.values.map((e) => TouristSpot.fromMap(e)).toList();
-      });
-    });
+    try {
+      final snapshot = await databaseRef.once();
+      final data = snapshot.snapshot.value as Map<dynamic, dynamic>?;
+
+      if (data != null) {
+        setState(() {
+          touristSpots = data.entries
+              .map((entry) => TouristSpot.fromMap(entry.key as String, entry.value as Map<dynamic, dynamic>))
+              .toList();
+        });
+      }
+    } catch (error) {
+      print("Error fetching data: $error");
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -112,10 +86,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 children: [
                   Stack(
                     children: [
-                      Image.network(spot.imageUrl,
-                          fit: BoxFit.cover,
-                          height: 200,
-                          width: double.infinity),
+                      Image.network(
+                        spot.imageUrl,
+                        fit: BoxFit.cover,
+                        height: 200,
+                        width: double.infinity,
+                      ),
                       Positioned(
                         bottom: 0,
                         left: 0,
@@ -128,14 +104,21 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(spot.name,
-                                  style: GoogleFonts.comfortaa(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold)),
-                              Text('₱${spot.price}/Person',
-                                  style: GoogleFonts.comfortaa(
-                                      color: Colors.white, fontSize: 16)),
+                              Text(
+                                spot.name,
+                                style: GoogleFonts.comfortaa(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '₱${spot.price}/Person',
+                                style: GoogleFonts.comfortaa(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ],
                           ),
                         ),

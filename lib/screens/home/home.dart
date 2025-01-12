@@ -1,12 +1,13 @@
-import 'package:fan_carousel_image_slider/fan_carousel_image_slider.dart';
+import 'dart:async'; // For Timer
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hugeicons/hugeicons.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:lb_tour/pop_up/homescreen/pick_tourist_spot_popup.dart';
-import 'package:lb_tour/screens/discover/booking.dart';
-import 'package:lb_tour/screens/discover/discover.dart';
+
+import '../../models/tourist_spot/tourist_spot_model.dart';
+import '../discover/booking.dart';
+import '../../pop_up/homescreen/pick_tourist_spot_popup.dart' as popup;
+
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,62 +18,148 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<TouristSpot> touristSpots = [];
-  List<TouristSpot> filteredTouristSpots = [];
-  TextEditingController searchController = TextEditingController();
+  final PageController _pageController = PageController(viewportFraction: 0.8);
+  final TextEditingController searchController = TextEditingController();
+  late Timer _autoScrollTimer;
 
   @override
   void initState() {
     super.initState();
     fetchTouristSpots();
-    searchController.addListener(() {
-      filterResults();
-    });
+    searchController.addListener(filterResults);
+
+    // Start auto-scrolling
+    _startAutoScroll();
+  }
+
+  @override
+  void dispose() {
+    // Dispose of the controller and timer to avoid memory leaks
+    _pageController.dispose();
+    _autoScrollTimer.cancel();
+    searchController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchTouristSpots() async {
-    DatabaseReference databaseRef =
-        FirebaseDatabase.instance.ref().child('TouristSpot');
+    DatabaseReference databaseRef = FirebaseDatabase.instance.ref().child('TouristSpot');
 
-    databaseRef.once().then((DatabaseEvent event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>;
-      setState(() {
-        touristSpots = data.values
-            .map((e) => TouristSpot.fromMap(e as Map<dynamic, dynamic>))
-            .toList(); // Ensure correct type casting to TouristSpot
-        filteredTouristSpots = touristSpots;
-      });
-    }).catchError((error) {
+    try {
+      final snapshot = await databaseRef.once();
+      final data = snapshot.snapshot.value as Map<dynamic, dynamic>?;
+
+      if (data != null) {
+        setState(() {
+          touristSpots = data.entries
+              .map((entry) => TouristSpot.fromMap(
+            entry.key as String, // Pass ID
+            entry.value as Map<dynamic, dynamic>, // Pass map data
+          ))
+              .toList();
+        });
+      }
+    } catch (error) {
       print("Error fetching data: $error");
-    });
+    }
   }
 
-  // Filter results based on search query
+
   void filterResults() {
-    String query = searchController.text.toLowerCase();
+    final query = searchController.text.toLowerCase();
     setState(() {
-      filteredTouristSpots = touristSpots
-          .where((spot) =>
-              spot.name.toLowerCase().contains(query))
+      touristSpots = touristSpots
+          .where((spot) => spot.name.toLowerCase().contains(query))
           .toList();
     });
   }
 
-  // Open the booking screen with a given tourist spot
-  void openBookingScreen(TouristSpot spot) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BookingScreen(spot: spot),
-      ),
-    );
+  void _startAutoScroll() {
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_pageController.hasClients && touristSpots.isNotEmpty) {
+        final nextPage = (_pageController.page?.toInt() ?? 0) + 1;
+        if (nextPage < touristSpots.length) {
+          _pageController.animateToPage(
+            nextPage,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        } else {
+          // Loop back to the first page
+          _pageController.jumpToPage(0);
+        }
+      }
+    });
   }
 
-  // Open the web view screen with a given URL
-  void openWebView(String url) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => InAppWebViewScreen(url: url),
+  Widget buildCarousel() {
+    return touristSpots.isNotEmpty
+        ? SizedBox(
+      height: 450,
+      width: MediaQuery
+          .of(context)
+          .size
+          .width,
+      child: PageView.builder(
+        controller: _pageController,
+        itemCount: touristSpots.length,
+        itemBuilder: (context, index) {
+          final spot = touristSpots[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BookingScreen(spot: spot),
+                ),
+              );
+            },
+            child: Column(
+              children: [
+                // Carousel Image
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  height: 350,
+                  width: MediaQuery
+                      .of(context)
+                      .size
+                      .width * 0.8,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      spot.imageUrl,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Tourist Spot Name
+                Text(
+                  spot.name,
+                  style: GoogleFonts.comfortaa(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color.fromARGB(255, 14, 86, 170),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    )
+        : const Center(
+      child: CircularProgressIndicator(
+        color: Color.fromARGB(255, 14, 86, 170),
       ),
     );
   }
@@ -86,18 +173,23 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             child: SingleChildScrollView(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Header Section
                   Stack(
                     children: [
                       Image.asset(
                         'assets/images/header.jpg',
-                        width: MediaQuery.of(context).size.width,
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width,
                         fit: BoxFit.cover,
                       ),
                       Container(
-                        width: MediaQuery.of(context).size.width,
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width,
                         height: 260,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -111,7 +203,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Positioned(
-
                         bottom: 0,
                         left: 0,
                         right: 0,
@@ -120,37 +211,31 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               'Where do you want to go?',
                               style: GoogleFonts.comfortaa(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                             const SizedBox(height: 10),
                             GestureDetector(
-                              onTap: () {
-                                // Call the function to show the tourist spot picker
-                                TouristSpotPicker.show(context);
-                              },
+                              onTap: () => popup.TouristSpotPicker.show(context),
                               child: Container(
-                                padding: EdgeInsets.all(10),
-                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
+                                width: 220,
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
                                 child: Card(
                                   elevation: 6,
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(),
-                                        height: 50,
-                                        width: double.infinity,
-                                        child: Center(
-                                          child: Text(
-                                            "Pick Tourist Spot",
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    ],
+                                  child: SizedBox(
+                                    height: 50,
+                                    width: double.infinity,
+                                    child: Center(
+                                      child: Text(
+                                        "Pick Tourist Spot",
+                                        style: const TextStyle(fontSize: 18),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -161,51 +246,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  touristSpots.isNotEmpty
-                      ? SizedBox(
-                          height: 430,
-                          width: MediaQuery.of(context).size.width,
-                          child: Stack(
-                            children: [
-                              FanCarouselImageSlider.sliderType1(
-                                imagesLink: touristSpots
-                                    .map((spot) => spot.imageUrl)
-                                    .toList(),
-                                isAssets: false,
-                                sliderHeight: 410,
-                                showIndicator: true,
-                                initalPageIndex:
-                                    touristSpots.isNotEmpty ? 0 : 0,
-                                indicatorActiveColor:
-                                    const Color.fromARGB(255, 14, 86, 170),
-                                autoPlay: true,
-                                currentItemShadow: const [
-                                  BoxShadow(
-                                    offset: Offset(1, 1),
-                                    color: Color.fromARGB(78, 158, 158, 158),
-                                    blurRadius: 10,
-                                  ),
-                                  BoxShadow(
-                                    offset: Offset(-1, -1),
-                                    color: Color.fromARGB(78, 158, 158, 158),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  if (touristSpots.isNotEmpty) {
-                                    openBookingScreen(touristSpots[0]); // Example to open the first tourist spot
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                        )
-                      : const Center(
-                          child: CircularProgressIndicator(
-                              color: Color.fromARGB(255, 14, 86, 170)),
-                        ),
+                  // Carousel Section
+                  buildCarousel(),
                 ],
               ),
             ),
@@ -215,48 +257,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-class InAppWebViewScreen extends StatelessWidget {
-  final String url;
-
-  const InAppWebViewScreen({super.key, required this.url});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const HugeIcon(
-                icon: HugeIcons.strokeRoundedLocation04,
-                color: Color.fromARGB(255, 14, 86, 170),
-                size: 24.0),
-            const SizedBox(width: 10),
-            Text(
-              "Tourist Spot",
-              style: GoogleFonts.comfortaa(
-                fontSize: 14,
-                color: const Color.fromARGB(255, 0, 0, 0),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-        leading: GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: const HugeIcon(
-              icon: HugeIcons.strokeRoundedArrowLeft02,
-              color: Colors.black,
-              size: 24.0),
-        ),
-      ),
-      body: InAppWebView(
-        initialUrlRequest: URLRequest(url: WebUri(url)),
-      ),
-    );
-  }
-}
-
