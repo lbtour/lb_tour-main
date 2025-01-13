@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../models/tourist_spot/tourist_spot_model.dart';
+import '../../navigation-tab.dart';
 import '../../utils/helpers/form_helpers.dart';
 
 class BookingPage extends StatefulWidget {
@@ -20,7 +23,6 @@ class BookingPage extends StatefulWidget {
   const BookingPage({
     Key? key,
     required this.spot,
-
     required this.fullnameController,
     required this.contactNumberController,
     required this.emailController,
@@ -39,44 +41,70 @@ class _BookingPageState extends State<BookingPage> {
   Map<DateTime, String> _userBookings = {};
   String _bookingStatus = "";
 
-
   @override
   void initState() {
     super.initState();
-    print('BookingPage received selectedDate yesssssssssssssssssssssssssssssss: ${widget.selectedDate}');
-
-  _fetchUserBookings();
-    if (widget.selectedDate != null) {
-      selectedDate = widget.selectedDate; // Initialize with passed date
-      _bookingStatus = _userBookings[selectedDate!] ?? "No booking on this date.";
-    }
-  }
-
-  Future<void> _fetchUserBookings() async {
-    User? user = widget.auth.currentUser;
-    if (user == null) return;
-
-    final snapshot = await widget.databaseRef.child('Booking').child(user.uid).get();
-    if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      final bookings = data.map((key, value) {
-        final bookingDate = DateTime.parse(value['date']);
-        final status = value['status'] as String; // Ensure it's a String
-        return MapEntry(bookingDate, status);
-      });
-      setState(() {
-        _userBookings = bookings;
-      });
-    }
-  }
-
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    setState(() {
-      selectedDate = selectedDay;
-      _bookingStatus = _userBookings[selectedDay] ?? "No booking on this date.";
+    print('BookingPage received selectedDate: ${widget.selectedDate}');
+    _fetchUserBookings().then((_) {
+      if (widget.selectedDate != null) {
+        setState(() {
+          selectedDate = widget.selectedDate;
+          _bookingStatus = _userBookings[selectedDate!] ?? "No booking on this date.";
+        });
+      }
     });
-    print('Selected date: $selectedDate'); // Debugging line
   }
+  Future<void> _fetchUserBookings() async {
+    try {
+      User? user = widget.auth.currentUser;
+      if (user == null) {
+        print("Error: No authenticated user found.");
+        return;
+      }
+
+      final snapshot = await widget.databaseRef.child('Booking').child(user.uid).get();
+      if (!snapshot.exists) {
+        print("No bookings found for user: ${user.uid}");
+        return;
+      }
+
+      print("Raw booking data fetched from Firebase:");
+      print(snapshot.value);
+
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+
+      // Parse bookings and ensure null safety
+      final bookings = data.entries.map((entry) {
+        final value = Map<String, dynamic>.from(entry.value as Map);
+
+        // Ensure 'date' is not null before parsing
+        final dateString = value['date']?.toString();
+        if (dateString == null) {
+          print("Warning: Booking ${entry.key} has no 'date'. Skipping...");
+          return null;
+        }
+
+        try {
+          final bookingDate = DateTime.parse(dateString);
+          final status = value['status']?.toString() ?? 'Unknown'; // Default to 'Unknown'
+          return MapEntry(bookingDate, status);
+        } catch (e) {
+          print("Error parsing date for Booking ${entry.key}: $e");
+          return null;
+        }
+      }).whereType<MapEntry<DateTime, String>>().toList(); // Remove null values
+
+      setState(() {
+        _userBookings = Map<DateTime, String>.fromEntries(bookings);
+      });
+
+      print("Processed bookings:");
+      print(_userBookings);
+    } catch (e) {
+      print("Error fetching user bookings: $e");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -142,25 +170,108 @@ class _BookingPageState extends State<BookingPage> {
           const SizedBox(height: 10),
 
           // Submit Booking Button
-    ElevatedButton(
-    onPressed: () {
-    print('Selected Date during submission: ${widget.selectedDate}');
-    if (widget.selectedDate == null) {
-    print('Error: No date selected!');
-    ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-    content: Text('Please select a date.'),
-    backgroundColor: Colors.red,
-    ),
-    );
-    return;
-    }
-    // Proceed with the submission logic...
-    },
-    child: const Text('Submit Booking'),
-    ),
+          ElevatedButton(
+            onPressed: () async {
+              // Refresh the selectedDate value before validation
+              final DateTime? refreshedDate = widget.selectedDate;
 
-    ],
+              // Check if a date is selected
+              if (refreshedDate == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please select a date.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              // Check if all fields are filled out
+              if (widget.fullnameController.text.isEmpty ||
+                  widget.contactNumberController.text.isEmpty ||
+                  widget.emailController.text.isEmpty ||
+                  widget.numberOfPeopleController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please fill out all fields.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              // Prepare the booking data
+              final bookingData = {
+                'fullName': widget.fullnameController.text,
+                'contactNumber': widget.contactNumberController.text,
+                'email': widget.emailController.text,
+                'numberOfPeople': widget.numberOfPeopleController.text,
+                'selectedDate': refreshedDate.toIso8601String(),
+                'touristName': widget.spot.name,
+                'imageUrl': widget.spot.imageUrl,
+                'address': widget.spot.address,
+                'description': widget.spot.description,
+                'status': 'Pending',
+              };
+
+              try {
+                final User? user = widget.auth.currentUser;
+                if (user != null) {
+                  // Check if a booking already exists for the selected date
+                  final snapshot = await widget.databaseRef
+                      .child('Booking')
+                      .child(user.uid)
+                      .orderByChild('selectedDate')
+                      .equalTo(refreshedDate.toIso8601String())
+                      .get();
+
+                  if (snapshot.exists) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('You already have a booking for the selected date.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Save the booking if no existing booking is found
+                  await widget.databaseRef
+                      .child('Booking')
+                      .child(user.uid)
+                      .push()
+                      .set(bookingData);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Booking saved successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+
+                  // Navigate to TabNavigation screen
+                  Get.offAll(() => TabNavigation());
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please log in to save a booking.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } catch (error) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Failed to save booking.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Submit Booking'),
+          ),
+
+        ],
       ),
     );
   }

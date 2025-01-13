@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lb_tour/screens/account/account.dart';
@@ -9,6 +11,8 @@ import 'package:lb_tour/screens/home/home.dart';
 import 'package:lb_tour/screens/home/notification.dart';
 import 'package:lb_tour/screens/likes/likes.dart';
 import 'package:lb_tour/screens/weather/weather.dart';
+
+import 'ccontroller/booking_controller.dart';
 
 class TabNavigation extends StatelessWidget {
   TabNavigation({super.key});
@@ -35,6 +39,10 @@ class TabNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+
+    // Ensure BookingController is initialized here
+    Get.put(BookingController());
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: DefaultTabController(

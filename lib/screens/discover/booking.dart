@@ -1,10 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import '../../ccontroller/activity_controller.dart';
+import '../../ccontroller/booking_controller.dart';
 import '../../models/tourist_spot/tourist_spot_model.dart';
 import 'activity_page.dart';
 import 'booking_page.dart';
@@ -21,6 +25,8 @@ class BookingScreen extends StatefulWidget {
 
 class _BookingScreenState extends State<BookingScreen> {
   int _currentPage = 0;
+
+  final ActivityController activityController = Get.put(ActivityController());
 
   // TextEditingControllers for the booking form
   final TextEditingController _fullnameController = TextEditingController();
@@ -40,34 +46,73 @@ class _BookingScreenState extends State<BookingScreen> {
     super.initState();
     _fetchUserBookings();
   }
-
   Future<void> _fetchUserBookings() async {
-    User? user = _auth.currentUser;
-    if (user == null) return;
+    try {
+      User? user = _auth.currentUser;
 
-    final snapshot = await _databaseRef.child('Booking').child(user.uid).get();
-    if (snapshot.exists) {
+      if (user == null) {
+        print("Error: No authenticated user found.");
+        return;
+      }
+
+      print("Fetching user bookings for UID: ${user.uid}");
+
+      final snapshot = await _databaseRef.child('Booking').child(user.uid).get();
+
+      if (!snapshot.exists) {
+        print("No bookings found for user: ${user.uid}");
+        return;
+      }
+
+      print("Raw booking data from Firebase:");
+      print(snapshot.value);
+
       final data = Map<String, dynamic>.from(snapshot.value as Map);
-      final bookings = data.map((key, value) {
-        final bookingDate = DateTime.parse(value['date']);
-        final status = value['status'] as String;
-        return MapEntry(bookingDate, status);
-      });
+
+      // Parse bookings and ensure null safety
+      final bookings = data.entries.map((entry) {
+        final value = Map<String, dynamic>.from(entry.value as Map);
+
+        final dateString = value['date']?.toString(); // Ensure `date` is a string
+        final status = value['status']?.toString() ?? 'Unknown'; // Default to 'Unknown'
+
+        if (dateString == null) {
+          print("Warning: Booking ${entry.key} has no 'date'. Skipping...");
+          return null;
+        }
+
+        try {
+          final bookingDate = DateTime.parse(dateString);
+          return MapEntry(bookingDate, status);
+        } catch (e) {
+          print("Error parsing date for Booking ${entry.key}: $e");
+          return null;
+        }
+      }).whereType<MapEntry<DateTime, String>>().toList(); // Remove null values
+
       setState(() {
-        _userBookings = bookings;
+        _userBookings = Map<DateTime, String>.fromEntries(bookings);
       });
+
+      print("Processed bookings:");
+      print(_userBookings);
+    } catch (e) {
+      print("Error fetching user bookings: $e");
     }
   }
 
+
   Widget _getDynamicContent() {
+    final BookingController bookingController = Get.put(BookingController());
+
     return Container(
       height: 340,
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: _currentPage == 0
-          ? Image.network(widget.spot.imageUrl, fit: BoxFit.cover)
+          ? Image.network(widget.spot.imageUrl, fit: BoxFit.cover) // Case 0: Overview
           : _currentPage == 1
-          ? Column(
+          ? Column( // Case 1: Booking
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
@@ -96,12 +141,14 @@ class _BookingScreenState extends State<BookingScreen> {
                       const SizedBox(height: 5),
                       Text(
                         _userBookings[selectedDate] ?? "Available.",
-                        style: GoogleFonts.comfortaa(fontSize: 14, color: Colors.green),
+                        style: GoogleFonts.comfortaa(
+                            fontSize: 14, color: Colors.green),
                       ),
                       const SizedBox(height: 5),
                       Text(
                         "Visiting Hours: 08:00 AM - 05:00 PM",
-                        style: GoogleFonts.comfortaa(fontSize: 14, color: Colors.black),
+                        style: GoogleFonts.comfortaa(
+                            fontSize: 14, color: Colors.black),
                       ),
                     ],
                   );
@@ -146,12 +193,26 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
             ),
           ),
-
         ],
       )
-          : Image.network(widget.spot.imageUrl, fit: BoxFit.cover),
+          : Obx(() => bookingController.selectedActivityImage.value.isNotEmpty // Case 2: Activities
+          ? Image.network(
+        bookingController.selectedActivityImage.value,
+        fit: BoxFit.cover,
+      )
+          : Center(
+        child: Text(
+          "No activities available",
+          style: GoogleFonts.comfortaa(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
+      )),
     );
   }
+
   void _showCalendarDialog() {
     showDialog(
       context: context,
@@ -225,7 +286,18 @@ class _BookingScreenState extends State<BookingScreen> {
         );
       },
     ),
-    ActivitiesPage(spot: widget.spot),
+    ActivitiesPage(
+      spot: widget.spot,
+      onActivitySelected: (String selectedActivityImage) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            // Update the dynamic content with the selected activity image
+            // Ensure dynamic content is refreshed
+            _getDynamicContent();
+          });
+        });
+      },
+    ),
   ];
 
 

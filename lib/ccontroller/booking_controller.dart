@@ -1,176 +1,100 @@
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
-
-import '../screens/authentication/login.dart';
 
 class BookingController extends GetxController {
   // Reactive variable to track the selected booking status
   var selectedStatus = 'Pending'.obs;
+  var selectedActivityImage = ''.obs;
 
-  // Example booking data
+  // Dynamic booking data grouped by status
   final bookings = {
-    'Pending': [
-      {'title': 'Flight to New York', 'date': 'Jan 10, 2025'},
-    ],
-    'Approved': [
-      {'title': 'Hotel Reservation', 'date': 'Feb 5, 2025'},
-    ],
-    'Finished': [
-      {'title': 'Tour in Paris', 'date': 'Dec 15, 2024'},
-    ],
-    'Cancelled': [
-      {'title': 'Cruise to Bahamas', 'date': 'Nov 20, 2024'},
-    ],
-  };
-}
+    'Pending': <Map<String, String>>[],
+    'Approved': <Map<String, String>>[],
+    'Finished': <Map<String, String>>[],
+    'Cancelled': <Map<String, String>>[],
+  }.obs;
 
-class AccountPage extends StatelessWidget {
-  const AccountPage({super.key});
+  // Firebase database reference
+  final DatabaseReference databaseRef = FirebaseDatabase.instance.ref();
+
+  // Firebase Auth instance
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
-  Widget build(BuildContext context) {
-    final bookingController = Get.put(BookingController());
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Account'),
-        centerTitle: true,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildAccountDetailsSection(),
-          const SizedBox(height: 30),
-          _buildBookingStatusButtons(bookingController),
-          const SizedBox(height: 20),
-          _buildBookingListContainer(bookingController),
-          const SizedBox(height: 30),
-          _buildLogoutButton(context),
-        ],
-      ),
-    );
+  void onInit() {
+    super.onInit();
+    fetchUserBookings();
   }
 
-  Widget _buildAccountDetailsSection() {
-    return Row(
-      children: [
-        const CircleAvatar(
-          radius: 40,
-          backgroundColor: Colors.grey,
-          child: Icon(
-            Icons.person,
-            size: 40,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'John Doe',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'john.doe@example.com',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
+
+
+  Future<void> fetchUserBookings() async {
+    try {
+      // Step 1: Get the current user's UID from Firebase Auth
+      final User? currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        print("Error: No authenticated user found.");
+        return;
+      }
+      final userId = currentUser.uid;
+      print("Fetched UID from Firebase Auth: $userId");
+
+      // Step 2: Access the user's bookings in Firebase Realtime Database
+      print("Fetching bookings for user: $userId from Firebase...");
+      final snapshot = await databaseRef.child('Booking').child(userId).get();
+
+      if (!snapshot.exists) {
+        print("No bookings found for user: $userId");
+        return;
+      }
+
+      print("Raw data fetched from Firebase:");
+      print(snapshot.value);
+
+      // Step 3: Clear existing bookings
+      bookings.forEach((key, value) => value.clear());
+      print("Cleared existing bookings in controller.");
+
+      // Step 4: Parse data and group by status
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      data.forEach((key, value) {
+        if (value is Map) {
+          // Safely parse fields
+          final booking = Map<String, dynamic>.from(value);
+          final status = booking['status']?.toString() ?? 'Pending'; // Default to 'Pending'
+          final touristName = booking['touristName']?.toString() ?? 'Unknown Booking';
+          final selectedDate = booking['selectedDate']?.toString();
+
+          if (selectedDate == null || selectedDate.isEmpty) {
+            print("Warning: Booking $key has an invalid or missing 'selectedDate'. Skipping...");
+            return; // Skip invalid booking
+          }
+
+          print("Processing booking ID: $key with status: $status");
+
+          if (bookings.containsKey(status)) {
+            bookings[status]?.add({
+              'title': touristName,
+              'date': selectedDate,
+            });
+            print("Added booking to $status group: ${bookings[status]?.last}");
+          }
+        }
+      });
+
+      // Step 5: Refresh bookings to update the UI
+      bookings.refresh();
+      print("Updated bookings in controller:");
+      print(bookings);
+
+      print("User bookings fetched successfully.");
+    } catch (error) {
+      print("Error fetching user bookings: $error");
+    }
   }
 
-  Widget _buildBookingStatusButtons(BookingController controller) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _statusButton(controller, 'Pending'),
-        _statusButton(controller, 'Approved'),
-        _statusButton(controller, 'Finished'),
-        _statusButton(controller, 'Cancelled'),
-      ],
-    );
-  }
-
-  Widget _statusButton(BookingController controller, String status) {
-    return Obx(() {
-      return ElevatedButton(
-        onPressed: () {
-          controller.selectedStatus.value = status;
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: controller.selectedStatus.value == status
-              ? Colors.blue
-              : Colors.grey,
-        ),
-        child: Text(status),
-      );
-    });
-  }
-
-  Widget _buildBookingListContainer(BookingController controller) {
-    return Obx(() {
-      final bookings = controller.bookings[controller.selectedStatus.value] ?? [];
-      return Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              blurRadius: 5,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: bookings.isEmpty
-            ? const Center(
-          child: Text(
-            'No bookings available.',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-        )
-            : Column(
-          children: bookings.map((booking) {
-            return ListTile(
-              leading: const Icon(Icons.calendar_today),
-              title: Text(booking['title']!),
-              subtitle: Text(booking['date']!),
-            );
-          }).toList(),
-        ),
-      );
-    });
-  }
-
-  Widget _buildLogoutButton(BuildContext context) {
-    return Center(
-      child: ElevatedButton(
-        onPressed: () {
-          // Logout and redirect to login
-          Get.offAll(() => const LoginScreen());
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.redAccent,
-          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-        ),
-        child: const Text(
-          'Logout',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-          ),
-        ),
-      ),
-    );
+  void updateSelectedActivityImage(String imageUrl) {
+    selectedActivityImage.value = imageUrl;
   }
 }
