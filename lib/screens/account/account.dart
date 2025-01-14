@@ -2,14 +2,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lb_tour/screens/account/submit_ticket_widget.dart';
 import 'package:lb_tour/screens/account/user_booking_page.dart';
+
 import '../../ccontroller/booking_controller.dart';
 import '../../repository/authentication_repository.dart';
 import '../authentication/login.dart';
 
 class AccountPage extends StatefulWidget {
-  const AccountPage({super.key});
+  final String? selectedStatus;
+
+  const AccountPage({super.key, this.selectedStatus});
 
   @override
   State<AccountPage> createState() => _AccountPageState();
@@ -20,11 +22,22 @@ class _AccountPageState extends State<AccountPage> {
   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
   String? fullName;
   String? email;
-  String avatar = 'assets/avatar1.png'; // Default avatar
+  String avatar = 'assets/images/avatar/Avatar (1).jpg'; // Default avatar
 
   @override
   void initState() {
     super.initState();
+
+    // Print what was passed to AccountPage
+    print("AccountPage initialized with selectedStatus: ${widget.selectedStatus}");
+
+    // Initialize the controller and set its status if provided
+    final bookingController = Get.put(BookingController());
+    if (widget.selectedStatus != null) {
+      bookingController.selectedStatus.value = widget.selectedStatus!;
+      print("Controller's selectedStatus updated to: ${widget.selectedStatus}");
+    }
+
     _fetchUserDetails();
   }
 
@@ -37,8 +50,17 @@ class _AccountPageState extends State<AccountPage> {
         final data = Map<String, dynamic>.from(snapshot.value as Map);
         setState(() {
           fullName = "${data['firstName']} ${data['lastName']}";
+          avatar = data['avatar'] ?? avatar;
         });
       }
+    }
+  }
+
+  Future<void> _saveAvatarSelection(String avatarPath) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _databaseRef.child('users').child(user.uid).update({'avatar': avatarPath});
+      print("Avatar updated to: $avatarPath");
     }
   }
 
@@ -54,12 +76,14 @@ class _AccountPageState extends State<AccountPage> {
               scrollDirection: Axis.horizontal, // Enable horizontal scrolling
               child: Row(
                 children: List.generate(5, (index) {
-                  final avatarPath = 'assets/avatar${index + 1}.png';
+                  final avatarPath = 'assets/images/avatar/Avatar (${index + 1}).jpg';
+
                   return GestureDetector(
                     onTap: () {
                       setState(() {
                         avatar = avatarPath;
                       });
+                      _saveAvatarSelection(avatarPath); // Save the selection to Firebase
                       Navigator.pop(context);
                     },
                     child: Padding(
@@ -79,10 +103,12 @@ class _AccountPageState extends State<AccountPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final bookingController = Get.put(BookingController());
+
+    // Debugging selectedStatus on each rebuild
+    print("AccountPage rebuild with controller.selectedStatus: ${bookingController.selectedStatus}");
 
     return Scaffold(
       body: ListView(
@@ -96,9 +122,7 @@ class _AccountPageState extends State<AccountPage> {
             height: 360,
             child: _buildBookingListContainer(bookingController, context),
           ),
-          const SizedBox(height: 10),
-          SubmitTicketWidget(),
-          const SizedBox(height: 10),
+          const SizedBox(height: 20),
           _buildLogoutButton(context),
         ],
       ),
@@ -163,6 +187,7 @@ class _AccountPageState extends State<AccountPage> {
         child: ElevatedButton(
           onPressed: () {
             controller.selectedStatus.value = status;
+            print("Status button pressed: $status");
           },
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.all(0),
@@ -183,6 +208,7 @@ class _AccountPageState extends State<AccountPage> {
     return Obx(() {
       final bookings = controller.bookings[controller.selectedStatus.value] ?? [];
       final limitedBookings = bookings.take(4).toList();
+      print("Bookings for status '${controller.selectedStatus.value}': $bookings");
       return Padding(
         padding: const EdgeInsets.only(left: 10.0, right: 10.0),
         child: Container(
@@ -208,10 +234,16 @@ class _AccountPageState extends State<AccountPage> {
                   ),
                 )
               else ...limitedBookings.map((booking) {
-                return ListTile(
-                  leading: const Icon(Icons.calendar_today),
-                  title: Text(booking['title']!),
-                  subtitle: Text(booking['date']!),
+                return GestureDetector(
+                  onTap: () {
+                    _showBookingDetails(context, booking);
+                  },
+                  child: ListTile(
+                    leading: const Icon(Icons.calendar_today),
+                    title: Text(booking['title']!),
+                    subtitle: Text(booking['date']!),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                  ),
                 );
               }).toList(),
               if (bookings.length > 4)
@@ -229,6 +261,36 @@ class _AccountPageState extends State<AccountPage> {
         ),
       );
     });
+  }
+
+  void _showBookingDetails(BuildContext context, Map<String, String> booking) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(booking['title'] ?? 'Booking Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Date: ${booking['date'] ?? 'N/A'}'),
+              const SizedBox(height: 8),
+              Text('Status: ${booking['status'] ?? 'N/A'}'),
+              const SizedBox(height: 8),
+              Text('Description: ${booking['description'] ?? 'No details available'}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildLogoutButton(BuildContext context) {

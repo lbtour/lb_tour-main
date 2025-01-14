@@ -4,10 +4,10 @@ import 'package:get/get.dart';
 
 class BookingController extends GetxController {
   // Reactive variable to track the selected booking status
-  var selectedStatus = 'Pending'.obs;
+  var selectedStatus = 'Cancelled'.obs;
   var selectedActivityImage = ''.obs;
 
-  // Dynamic booking data grouped by status
+  // Reactive booking data grouped by status
   final bookings = {
     'Pending': <Map<String, String>>[],
     'Approved': <Map<String, String>>[],
@@ -24,11 +24,10 @@ class BookingController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchUserBookings();
+    fetchUserBookings(); // Fetch bookings when the controller is initialized
   }
 
-
-
+  /// Fetch user bookings from Firebase
   Future<void> fetchUserBookings() async {
     try {
       // Step 1: Get the current user's UID from Firebase Auth
@@ -62,7 +61,7 @@ class BookingController extends GetxController {
         if (value is Map) {
           // Safely parse fields
           final booking = Map<String, dynamic>.from(value);
-          final status = booking['status']?.toString() ?? 'Pending'; // Default to 'Pending'
+          final status = booking['status']?.toString() ?? ''; // Default to 'Pending'
           final touristName = booking['touristName']?.toString() ?? 'Unknown Booking';
           final selectedDate = booking['selectedDate']?.toString();
 
@@ -94,6 +93,7 @@ class BookingController extends GetxController {
     }
   }
 
+  /// Update the selected activity image
   void updateSelectedActivityImage(String imageUrl) {
     selectedActivityImage.value = imageUrl;
   }

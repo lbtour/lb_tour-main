@@ -105,7 +105,7 @@ class TopRatedScreen extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => BookingScreen(spot: selectedSpot),
+                                  builder: (context) => BookingScreen(spot: selectedSpot,initialPage: 1,),
                                 ),
                               );
                             }

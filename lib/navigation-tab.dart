@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lb_tour/screens/account/account.dart';
@@ -15,7 +14,10 @@ import 'package:lb_tour/screens/weather/weather.dart';
 import 'ccontroller/booking_controller.dart';
 
 class TabNavigation extends StatelessWidget {
-  TabNavigation({super.key});
+  final int initialIndex; // To determine which tab to display
+  final String? selectedStatus; // Pass selected status
+
+  TabNavigation({super.key, this.initialIndex = 0, this.selectedStatus});
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
@@ -23,7 +25,7 @@ class TabNavigation extends StatelessWidget {
   Future<void> markAllBookingsAsRead(String userId) async {
     DatabaseEvent event = await _database
         .child('Booking')
-        .child(userId)  // Navigate to the user's bookings
+        .child(userId) // Navigate to the user's bookings
         .once();
 
     if (event.snapshot.value != null) {
@@ -39,127 +41,127 @@ class TabNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
+    print("TabNavigation initialized with selectedStatus: $selectedStatus");
 
     // Ensure BookingController is initialized here
     Get.put(BookingController());
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: DefaultTabController(
-        length: 5,
-        child: Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                const HugeIcon(
-                    icon: HugeIcons.strokeRoundedLocation01,
-                    color: Color.fromARGB(255, 14, 86, 170),
-                    size: 24.0),
-                const SizedBox(width: 10),
-                Text(
-                  'Lobo, Batangas',
-                  style: GoogleFonts.comfortaa(
-                    fontSize: 14,
-                    color: const Color.fromARGB(255, 0, 0, 0),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              StreamBuilder<DatabaseEvent>(
-                stream: _database
-                    .child('Booking')
-                    .child(_auth.currentUser?.uid ?? '')
-                    .onValue, // Listen to any changes in the user's booking
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  }
 
-                  bool hasNotification = false;
-
-                  if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
-                    // Check if any booking has 'isActive' set to true
-                    Map<dynamic, dynamic> bookings =
-                        Map<dynamic, dynamic>.from(snapshot.data!.snapshot.value as Map);
-                    for (var bookingId in bookings.keys) {
-                      if (bookings[bookingId]['isActive'] == true) {
-                        hasNotification = true;
-                        break;
-                      }
-                    }
-                  }
-
-                  return GestureDetector(
-                    onTap: () async {
-                      if (_auth.currentUser != null) {
-                        await markAllBookingsAsRead(_auth.currentUser!.uid);
-                      }
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NotificationScreen(),
-                        ),
-                      );
-                    },
-                    child: Stack(
+    return SafeArea(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: DefaultTabController(
+          length: 5,
+          initialIndex: initialIndex, // Use the passed initialIndex
+          child: Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: () {},
+                    child: Row(
                       children: [
                         const HugeIcon(
-                          icon: HugeIcons.strokeRoundedNotification01,
-                          color: Colors.black,
+                          icon: HugeIcons.strokeRoundedLocation01,
+                          color: Color.fromARGB(255, 14, 86, 170),
                           size: 24.0,
                         ),
-                        if (hasNotification)
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: Container(
-                              width: 8.0,
-                              height: 8.0,
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Lobo, Batangas',
+                          style: GoogleFonts.comfortaa(
+                            fontSize: 14,
+                            color: const Color.fromARGB(255, 0, 0, 0),
                           ),
+                        ),
                       ],
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
-              const SizedBox(width: 14)
-            ],
-          ),
-          body: TabBarView(
+              actions: [
+                StreamBuilder<DatabaseEvent>(
+                  stream: _database.child('Booking').child(_auth.currentUser?.uid ?? '').onValue,
+                  builder: (context, snapshot) {
+                    bool hasNotification = false;
 
+                    if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+                      Map<dynamic, dynamic> bookings =
+                      Map<dynamic, dynamic>.from(snapshot.data!.snapshot.value as Map);
+                      for (var bookingId in bookings.keys) {
+                        if (bookings[bookingId]['isActive'] == true) {
+                          hasNotification = true;
+                          break;
+                        }
+                      }
+                    }
 
-            children: [
-              HomeScreen(),
-              DiscoverScreen(),
-              WeatherScreen(),
-              TopRatedScreen(),
-              AccountPage(),
-            ],
-          ),
-          bottomNavigationBar: Padding(
-            padding: const EdgeInsets.only(bottom: 5.0),
-            child: Container(
-              height: 60,
-              alignment: Alignment.bottomCenter,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  canvasColor: const Color.fromARGB(255, 255, 255, 255),
-                  primaryColor: Colors.white,
-                  textTheme: Theme.of(context).textTheme.copyWith(
-                        bodySmall: GoogleFonts.comfortaa(color: Colors.black),
+                    return GestureDetector(
+                      onTap: () async {
+                        if (_auth.currentUser != null) {
+                          await markAllBookingsAsRead(_auth.currentUser!.uid);
+                        }
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationScreen(),
+                          ),
+                        );
+                      },
+                      child: Stack(
+                        children: [
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedNotification01,
+                            color: Colors.black,
+                            size: 24.0,
+                          ),
+                          if (hasNotification)
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                width: 8.0,
+                                height: 8.0,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
+                    );
+                  },
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 0),
+                const SizedBox(width: 14),
+              ],
+            ),
+            body: TabBarView(
+              children: [
+                HomeScreen(),
+                DiscoverScreen(),
+                WeatherScreen(),
+                TopRatedScreen(),
+                AccountPage(selectedStatus: selectedStatus), // Pass status here
+              ],
+            ),
+            bottomNavigationBar: Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: Container(
+                height: 60, // Adjust height as needed
+                width: MediaQuery.of(context).size.width, // Set width to device width
+                alignment: Alignment.bottomCenter,
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    canvasColor: const Color.fromARGB(255, 255, 255, 255),
+                    primaryColor: Colors.white,
+                    textTheme: Theme.of(context).textTheme.copyWith(
+                      bodySmall: GoogleFonts.comfortaa(color: Colors.black),
+                    ),
+                  ),
                   child: TabBar(
-                    padding: EdgeInsets.all(0),
+                    padding: const EdgeInsets.all(0),
                     tabAlignment: TabAlignment.center,
                     unselectedLabelColor: Colors.black,
                     labelColor: const Color.fromARGB(255, 14, 86, 170),
@@ -169,7 +171,7 @@ class TabNavigation extends StatelessWidget {
                       insets: EdgeInsets.symmetric(horizontal: 5),
                     ),
                     labelStyle: GoogleFonts.comfortaa(fontWeight: FontWeight.bold),
-                    labelPadding: const EdgeInsets.symmetric(horizontal: 10), // Adjust spacing
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 10),
                     tabs: const [
                       Tab(
                         icon: HugeIcon(
@@ -223,12 +225,10 @@ class TabNavigation extends StatelessWidget {
                       ),
                     ],
                   ),
-
                 ),
               ),
             ),
           ),
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         ),
       ),
     );

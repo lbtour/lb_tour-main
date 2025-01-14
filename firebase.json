@@ -1,1 +1,36 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"lobo-tour","appId":"1:353547129400:android:9883e7a44114360106cccd","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"lobo-tour","configurations":{"android":"1:353547129400:android:9883e7a44114360106cccd","ios":"1:353547129400:ios:00c997978fc0782106cccd","web":"1:353547129400:web:4ccf6776e0c4168106cccd"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "lobo-tour",
+          "appId": "1:353547129400:android:9883e7a44114360106cccd",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "lobo-tour",
+          "configurations": {
+            "android": "1:353547129400:android:9883e7a44114360106cccd",
+            "ios": "1:353547129400:ios:00c997978fc0782106cccd",
+            "web": "1:353547129400:web:4ccf6776e0c4168106cccd"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
+}

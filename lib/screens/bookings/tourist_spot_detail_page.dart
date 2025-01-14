@@ -15,19 +15,21 @@ class TouristSpotDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(name)),
-      body: Column(
-        children: [
-          Image.network(
-              imageUrl, height: 250, width: double.infinity, fit: BoxFit.cover),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => _openMap(context, location),
-            // Pass location to _openMap
-            child: Text('Get Directions'),
-          ),
-        ],
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(title: Text(name)),
+        body: Column(
+          children: [
+            Image.network(
+                imageUrl, height: 250, width: double.infinity, fit: BoxFit.cover),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _openMap(context, location),
+              // Pass location to _openMap
+              child: Text('Get Directions'),
+            ),
+          ],
+        ),
       ),
     );
   }

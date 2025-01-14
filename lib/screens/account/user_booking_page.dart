@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class AllBookingsPage extends StatelessWidget {
@@ -22,13 +21,49 @@ class AllBookingsPage extends StatelessWidget {
         itemCount: bookings.length,
         itemBuilder: (context, index) {
           final booking = bookings[index];
-          return ListTile(
-            leading: const Icon(Icons.calendar_today),
-            title: Text(booking['title']!),
-            subtitle: Text(booking['date']!),
+          return GestureDetector(
+            onTap: () {
+              _showBookingDetails(context, booking);
+            },
+            child: ListTile(
+              leading: const Icon(Icons.calendar_today),
+              title: Text(booking['title']!),
+              subtitle: Text(booking['date']!),
+              trailing: const Icon(Icons.arrow_forward_ios),
+            ),
           );
         },
       ),
+    );
+  }
+
+  void _showBookingDetails(BuildContext context, Map<String, String> booking) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(booking['title'] ?? 'Booking Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Date: ${booking['date'] ?? 'N/A'}'),
+              const SizedBox(height: 8),
+              Text('Status: ${booking['status'] ?? 'N/A'}'),
+              const SizedBox(height: 8),
+              Text('Description: ${booking['description'] ?? 'No details available'}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

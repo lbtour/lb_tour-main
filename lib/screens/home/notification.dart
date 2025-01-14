@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 
+import '../../navigation-tab.dart';
+
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
@@ -24,55 +26,70 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
-  // Fetch user bookings from Firebase
+  /// Fetch user bookings from Firebase
   Future<void> fetchUserBookings() async {
-    DatabaseReference bookingsRef =
-        FirebaseDatabase.instance.ref().child('Booking');
+    DatabaseReference bookingsRef = FirebaseDatabase.instance.ref().child('Booking');
+    DatabaseReference usersRef = FirebaseDatabase.instance.ref().child('users');
 
-    // Log the current user UID
     print("Fetching bookings for user: ${currentUser!.uid}");
 
-    // Query the 'Booking' node for the logged-in user's bookings
-    bookingsRef
-        .child(
-            currentUser!.uid) // Access the bookings directly using the userId
-        .once()
-        .then((DatabaseEvent event) {
+    bookingsRef.child(currentUser!.uid).once().then((DatabaseEvent event) async {
       final data = event.snapshot.value as Map<dynamic, dynamic>? ?? {};
+
+      // Debug Log
       print("Fetched bookings data: $data");
 
-      // Parse the booking data
       List<Map<String, dynamic>> bookings = [];
-      data.forEach((key, value) {
+
+      for (var entry in data.entries) {
+        String key = entry.key;
+        Map<dynamic, dynamic> value = entry.value;
+
+        String fullName = value['fullName'] ?? 'Unknown';
+
+        // If fullName is missing or null, fetch it from the users node
+        if (fullName == 'Unknown' || fullName.isEmpty) {
+          final userSnapshot = await usersRef.child(currentUser!.uid).get();
+          if (userSnapshot.exists) {
+            final userData = userSnapshot.value as Map<dynamic, dynamic>;
+            fullName = "${userData['firstName'] ?? 'Unknown'} ${userData['lastName'] ?? 'Unknown'}";
+          }
+        }
+
         bookings.add({
           'id': key,
-          'fullname': value['fullname'],
-          'email': value['email'],
-          'touristName': value['touristName'],
-          'price': value['price'],
-          'date': value['date'],
-          'status': value['status'],
-          'numberOfPeople': value['numberOfPeople'],
-          'description': value['description'],
-          'contactNumber': value['contactNumber'],
-          'imageUrl': value['imageUrl'],
+          'fullName': fullName,
+          'email': value['email'] ?? 'Unknown',
+          'touristName': value['touristName'] ?? 'Unknown',
+          'price': value['price'] ?? '0',
+          'selectedDate': value['selectedDate'] ?? '',
+          'status': value['status'] ?? 'Unknown',
+          'numberOfPeople': value['numberOfPeople'] ?? '0',
+          'description': value['description'] ?? '',
+          'contactNumber': value['contactNumber'] ?? 'Unknown',
+          'imageUrl': value['imageUrl'] ??
+              'https://via.placeholder.com/70', // Default image if null
         });
-      });
+      }
 
       setState(() {
-        userBookings = bookings; // Update state with the fetched bookings
-        print(
-            "Bookings fetched: $userBookings"); // Debug log to check the bookings list
+        userBookings = bookings;
       });
+      print("Processed bookings: $userBookings");
+    }).catchError((error) {
+      print("Error fetching bookings: $error");
     });
   }
 
-  // Function to format the date
+  /// Format the date
   String formatDate(String rawDate) {
-    DateTime dateTime =
-        DateTime.parse(rawDate); // Convert the raw date string to DateTime
-    return DateFormat('MMMM d, yyyy').format(
-        dateTime); // Format to "Month Day, Year" (e.g. December 5, 2024)
+    try {
+      DateTime dateTime = DateTime.parse(rawDate);
+      return DateFormat('MMMM d, yyyy').format(dateTime);
+    } catch (e) {
+      print("Error formatting date: $e");
+      return 'Invalid Date';
+    }
   }
 
   @override
@@ -82,94 +99,142 @@ class _NotificationScreenState extends State<NotificationScreen> {
         backgroundColor: Colors.transparent,
         leading: GestureDetector(
           onTap: () {
-            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TabNavigation(initialIndex: 0),
+              ),
+            );
           },
           child: const HugeIcon(
-              icon: HugeIcons.strokeRoundedArrowLeft02,
-              color: Colors.black,
-              size: 24.0),
+            icon: HugeIcons.strokeRoundedArrowLeft02,
+            color: Colors.black,
+            size: 24.0,
+          ),
         ),
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const HugeIcon(
-                icon: HugeIcons.strokeRoundedNotification01,
-                color: Color.fromARGB(255, 14, 86, 170),
-                size: 24.0),
+              icon: HugeIcons.strokeRoundedNotification01,
+              color: Color.fromARGB(255, 14, 86, 170),
+              size: 24.0,
+            ),
             const SizedBox(width: 10),
             Text(
               "Notifications",
               style: GoogleFonts.comfortaa(
                 fontSize: 14,
-                color: const Color.fromARGB(255, 0, 0, 0),
+                color: Colors.black,
               ),
             ),
           ],
         ),
       ),
-      body: userBookings.isEmpty
-          ? const Center(child: Text("No bookings found."))
-          : ListView.builder(
-              itemCount: userBookings.length,
-              itemBuilder: (context, index) {
-                final booking = userBookings[index];
-                return Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Display the image of the tourist spot
-                        Image.network(
-                          booking['imageUrl'],
-                          width: 70,
-                          height: 70,
-                          fit: BoxFit.cover,
-                        ),
-                        const SizedBox(width: 10),
-                        // Display booking details
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                booking['touristName'],
-                                style: GoogleFonts.comfortaa(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                "Booked by: ${booking['fullname']}",
-                                style: GoogleFonts.comfortaa(fontSize: 14),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                "Date: ${formatDate(booking['date'])}",
-                                style: GoogleFonts.comfortaa(fontSize: 14),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                "Status: ${booking['status']}",
-                                style: GoogleFonts.comfortaa(
-                                  fontSize: 14,
-                                  color: booking['status'] == "Pending"
-                                      ? Colors.orange
-                                      : booking['status'] == "Cancelled"
-                                          ? Colors.red
-                                          : Colors.green,
-                                ),
-                              ),
-                            ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            if (userBookings.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: Text("No bookings found."),
+                ),
+              )
+            else
+              ListView.builder(
+                shrinkWrap: true, // Ensure the ListView only takes as much space as it needs
+                physics: const NeverScrollableScrollPhysics(), // Disable internal scrolling
+                itemCount: userBookings.length,
+                itemBuilder: (context, index) {
+                  final booking = userBookings[index];
+                  return GestureDetector(
+                    onTap: () {
+                      // Log the status value being sent
+                      print("Navigating to AccountPage with status: ${booking['status']}");
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TabNavigation(
+                            initialIndex: 4, // Navigate to the AccountPage tab
+                            selectedStatus: booking['status'], // Pass the status of the selected booking
                           ),
                         ),
-                      ],
+                      );
+                    },
+
+                    child: Card(
+                      elevation: 4,
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 15),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Image of the tourist spot
+                            Image.network(
+                              booking['imageUrl'],
+                              width: 70,
+                              height: 70,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 70,
+                                  height: 70,
+                                  color: Colors.grey,
+                                  child: const Icon(Icons.error),
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 10),
+                            // Booking details
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    booking['touristName'],
+                                    style: GoogleFonts.comfortaa(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "Booked by: ${booking['fullName']}",
+                                    style: GoogleFonts.comfortaa(fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "Date: ${booking['selectedDate'] != null && booking['selectedDate'].toString().isNotEmpty ? formatDate(booking['selectedDate'].toString()) : 'No date provided'}",
+                                    style: GoogleFonts.comfortaa(fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "Status: ${booking['status']}",
+                                    style: GoogleFonts.comfortaa(
+                                      fontSize: 14,
+                                      color: booking['status'] == "Pending"
+                                          ? Colors.orange
+                                          : booking['status'] == "Cancelled"
+                                          ? Colors.red
+                                          : Colors.green,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
