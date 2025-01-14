@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "lobo": "lobo-tour",
+    "default": "lobo-tour"
+  },
+  "targets": {},
+  "etags": {}
+}
