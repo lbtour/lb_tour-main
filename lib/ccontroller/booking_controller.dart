@@ -30,16 +30,14 @@ class BookingController extends GetxController {
   /// Fetch user bookings from Firebase
   Future<void> fetchUserBookings() async {
     try {
-      // Step 1: Get the current user's UID from Firebase Auth
+      // Get the current user's UID
       final User? currentUser = _auth.currentUser;
       if (currentUser == null) {
         print("Error: No authenticated user found.");
         return;
       }
       final userId = currentUser.uid;
-      print("Fetched UID from Firebase Auth: $userId");
 
-      // Step 2: Access the user's bookings in Firebase Realtime Database
       print("Fetching bookings for user: $userId from Firebase...");
       final snapshot = await databaseRef.child('Booking').child(userId).get();
 
@@ -51,42 +49,66 @@ class BookingController extends GetxController {
       print("Raw data fetched from Firebase:");
       print(snapshot.value);
 
-      // Step 3: Clear existing bookings
+      // Clear existing bookings
       bookings.forEach((key, value) => value.clear());
-      print("Cleared existing bookings in controller.");
 
-      // Step 4: Parse data and group by status
+      // Parse data and group by status
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       data.forEach((key, value) {
         if (value is Map) {
-          // Safely parse fields
           final booking = Map<String, dynamic>.from(value);
-          final status = booking['status']?.toString() ?? ''; // Default to 'Pending'
-          final touristName = booking['touristName']?.toString() ?? 'Unknown Booking';
-          final selectedDate = booking['selectedDate']?.toString();
 
-          if (selectedDate == null || selectedDate.isEmpty) {
-            print("Warning: Booking $key has an invalid or missing 'selectedDate'. Skipping...");
+          // Extract and validate booking fields
+          final date = booking['date']?.toString() ?? 'N/A';
+          final status = booking['status']?.toString() ?? 'Pending';
+          final touristName = booking['touristName']?.toString() ?? 'Unknown Booking';
+          final fullname = booking['fullname']?.toString() ?? 'N/A';
+          final contactNumber = booking['contactNumber']?.toString() ?? 'N/A';
+          final price = booking['price']?.toString() ?? 'N/A';
+          final numberOfPeople = booking['numberOfPeople']?.toString() ?? 'N/A';
+          final address = booking['address']?.toString() ?? 'N/A';
+          final description = booking['description']?.toString() ?? 'No details available';
+          final email = booking['email']?.toString() ?? 'N/A';
+          final imageUrl = booking['imageUrl']?.toString() ?? '';
+
+          if (date == 'N/A' || date.isEmpty) {
+            print("Warning: Booking $key has an invalid or missing 'date'. Skipping...");
             return; // Skip invalid booking
           }
 
           print("Processing booking ID: $key with status: $status");
 
+          // Add booking to the appropriate status group
           if (bookings.containsKey(status)) {
             bookings[status]?.add({
+              'id': key,
               'title': touristName,
-              'date': selectedDate,
+              'date': date,
+              'fullname': fullname,
+              'contactNumber': contactNumber,
+              'price': price,
+              'numberOfPeople': numberOfPeople,
+              'address': address,
+              'description': description,
+              'email': email,
+              'imageUrl': imageUrl,
             });
             print("Added booking to $status group: ${bookings[status]?.last}");
           }
         }
       });
 
-      // Step 5: Refresh bookings to update the UI
-      bookings.refresh();
-      print("Updated bookings in controller:");
-      print(bookings);
+      // Print all bookings grouped by status
+      print("Bookings grouped by status:");
+      bookings.forEach((status, bookingsList) {
+        print("Status: $status");
+        for (var booking in bookingsList) {
+          print(booking);
+        }
+      });
 
+      // Refresh bookings to update the UI
+      bookings.refresh();
       print("User bookings fetched successfully.");
     } catch (error) {
       print("Error fetching user bookings: $error");

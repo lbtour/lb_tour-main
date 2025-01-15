@@ -123,9 +123,13 @@ class _OverviewPageState extends State<OverviewPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(widget.spot.name,
-                  style: GoogleFonts.comfortaa(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                widget.spot.name,
+                style: GoogleFonts.comfortaa(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               isLoading
                   ? const CircularProgressIndicator()
                   : IconButton(
@@ -144,7 +148,8 @@ class _OverviewPageState extends State<OverviewPage> {
           ),
           const Divider(),
           GestureDetector(
-            onTap: () => _openMap(context, widget.spot.address, widget.spot.name),
+            onTap: () =>
+                _openMap(context, widget.spot.address, widget.spot.name),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(10),
@@ -158,40 +163,74 @@ class _OverviewPageState extends State<OverviewPage> {
                 child: Text(
                   "Get Directions",
                   style: GoogleFonts.comfortaa(
-                      fontSize: 15, color: Colors.white),
+                    fontSize: 15,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
           ),
           const Divider(),
-          Text("BACKGROUND",
-              style: GoogleFonts.comfortaa(
-                  fontSize: 14, fontWeight: FontWeight.w900)),
-          Text(widget.spot.description,
-              style: GoogleFonts.comfortaa(fontSize: 12),
-              textAlign: TextAlign.justify),
+          Text(
+            "BACKGROUND",
+            style: GoogleFonts.comfortaa(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Text(
+            widget.spot.description,
+            style: GoogleFonts.comfortaa(fontSize: 12),
+            textAlign: TextAlign.justify,
+          ),
           const Divider(),
           Align(
             alignment: Alignment.bottomRight,
-            child: Text('₱${widget.spot.price}/Person',
-                style: GoogleFonts.comfortaa(
-                    fontSize: 14, color: const Color.fromARGB(255, 14, 86, 170))),
+            child: Text(
+              '₱${widget.spot.price}/Person',
+              style: GoogleFonts.comfortaa(
+                fontSize: 14,
+                color: const Color.fromARGB(255, 14, 86, 170),
+              ),
+            ),
           ),
           const Divider(),
-          Text("Virtual Tour",
-              style: GoogleFonts.comfortaa(
-                  fontSize: 14, fontWeight: FontWeight.w900)),
+          Text(
+            [
+              "olo olo mangrove forest",
+              "mt. nalayag",
+              "lagadlarin mangrove forest"
+            ]
+                .contains(widget.spot.name.toLowerCase().trim())
+                ? "Virtual Tour"
+                : "Images",
+            style: GoogleFonts.comfortaa(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
           const SizedBox(height: 10),
           Column(
-            children: widget.spot.virtualImages.map((imageUrl) {
+            children: widget.spot.virtualImages.map<Widget>((imageUrl) {
               return GestureDetector(
-                onTap: () {
+                onTap: [
+                  "olo olo mangrove forest",
+                  "mt. nalayag",
+                  "lagadlarin mangrove forest"
+                ]
+                    .contains(widget.spot.name.toLowerCase().trim())
+
+                    ? () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PanoramaPage(imageUrl: imageUrl),
+                      builder: (context) =>
+                          PanoramaPage(imageUrl: imageUrl),
                     ),
                   );
+                }
+                    : () {
+                  _showImagePopup(context, imageUrl);
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 5),
@@ -204,6 +243,34 @@ class _OverviewPageState extends State<OverviewPage> {
                           fit: BoxFit.cover,
                           height: 200,
                           width: double.infinity,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: progress.expectedTotalBytes != null
+                                    ? progress.cumulativeBytesLoaded /
+                                    (progress.expectedTotalBytes ?? 1)
+                                    : null,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 200,
+                              width: double.infinity,
+                              color: Colors.grey,
+                              child: Center(
+                                child: Text(
+                                  "Failed to load image",
+                                  style: GoogleFonts.comfortaa(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       Positioned.fill(
@@ -211,7 +278,16 @@ class _OverviewPageState extends State<OverviewPage> {
                           color: Colors.black.withOpacity(0.5),
                           child: Center(
                             child: Text(
-                              "Tap here to view VR Tour",
+                              [
+                                "olo olo mangrove forest",
+                                "mt. nalayag",
+                                "lagadlarin mangrove forest"
+                              ]
+                                  .contains(
+                                  widget.spot.name.toLowerCase().trim())
+
+                                  ? "Tap here to view VR Tour"
+                                  : "Tap here for more details",
                               style: GoogleFonts.comfortaa(
                                 fontSize: 18,
                                 color: Colors.white,
@@ -231,9 +307,127 @@ class _OverviewPageState extends State<OverviewPage> {
         ],
       ),
     );
+
+}
+}
+
+
+
+
+Future<void> _openMap(BuildContext context, String location, String name) async {
+  final availableMaps = await MapLauncher.installedMaps;
+
+  if (availableMaps.isNotEmpty) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Wrap(
+          children: availableMaps.map((map) {
+            return ListTile(
+              leading: Icon(Icons.map),
+              title: Text(map.mapName),
+              onTap: () async {
+                Navigator.pop(context);
+                try {
+                  // Extract coordinates from the location string
+                  final regex = RegExp(r'@([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)');
+                  final match = regex.firstMatch(location);
+
+                  if (match != null) {
+                    final latitude = double.tryParse(match.group(1) ?? '');
+                    final longitude = double.tryParse(match.group(2) ?? '');
+
+                    if (latitude != null && longitude != null) {
+                      await map.showDirections(
+                        destination: Coords(latitude, longitude),
+                        destinationTitle: name,
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invalid coordinates.')),
+                      );
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Coordinates not found.')),
+                    );
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              },
+            );
+          }).toList(),
+        );
+      },
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No available map applications.')),
+    );
   }
 }
 
-Future<void> _openMap(BuildContext context, String location, String name) async {
-  // Existing map opening logic
+
+
+
+
+void _showImagePopup(BuildContext context, String imageUrl) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(10),
+              ),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: 200,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: progress.expectedTotalBytes != null
+                          ? progress.cumulativeBytesLoaded /
+                          (progress.expectedTotalBytes ?? 1)
+                          : null,
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey,
+                    height: 200,
+                    width: double.infinity,
+                    child: const Center(
+                      child: Text("Failed to load image."),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Close"),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
+

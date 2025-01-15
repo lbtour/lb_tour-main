@@ -2,13 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:map_launcher/map_launcher.dart';
-import '../../models/tourist_spot/tourist_spot_model.dart';
+
+class TouristSpot {
+  final String id;
+  final String name;
+  final String address;
+  final String imageUrl;
+  final String description;
+  final String date; // Replaced formattedDate with date
+  final String price;
+
+  TouristSpot({
+    required this.id,
+    required this.name,
+    required this.address,
+    required this.imageUrl,
+    required this.description,
+    required this.date,
+    required this.price,
+  });
+
+  // fromMap method to parse data from Firebase
+  factory TouristSpot.fromMap(String id, Map<dynamic, dynamic> data) {
+    return TouristSpot(
+      id: id,
+      name: data['name'] ?? 'N/A',
+      address: data['address'] ?? 'N/A',
+      imageUrl: data['imageUrl'] ?? '',
+      description: data['description'] ?? 'No description available',
+      date: data['date'] ?? 'N/A', // Directly map the date field
+      price: data['price'] ?? 'N/A',
+    );
+  }
+}
 
 class TouristSpotPicker {
   static Future<void> show(BuildContext context) async {
     final spots = await _fetchTouristSpots();
 
     if (spots.isEmpty) {
+      // Show dialog if no tourist spots are available
       showDialog(
         context: context,
         builder: (BuildContext context) => AlertDialog(
@@ -25,6 +58,7 @@ class TouristSpotPicker {
       return;
     }
 
+    // Show tourist spots in a dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -43,17 +77,61 @@ class TouristSpotPicker {
                   margin: const EdgeInsets.symmetric(vertical: 5),
                   child: InkWell(
                     onTap: () {
-                      _showAvailableMaps(context, spot.address, spot.name);
+                      // Show spot details in a dialog
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text(spot.name),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Name: ${spot.name}'),
+                                const SizedBox(height: 8),
+                                Text('Address: ${spot.address}'),
+                                const SizedBox(height: 8),
+                                Text('Price: ${spot.price}'),
+                                const SizedBox(height: 8),
+                                Text('Description: ${spot.description}'),
+                                const SizedBox(height: 8),
+                                Text('Date Added: ${spot.date}'),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     },
                     child: Column(
                       children: [
                         Stack(
                           children: [
+                            // Display network image with fallback
                             Image.network(
-                              spot.imageUrl,
+                              spot.imageUrl.isNotEmpty
+                                  ? spot.imageUrl
+                                  : 'https://via.placeholder.com/150',
                               fit: BoxFit.cover,
                               height: 150,
                               width: double.infinity,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: 150,
+                                  width: double.infinity,
+                                  color: Colors.grey,
+                                  child: Center(
+                                    child: Icon(Icons.error, color: Colors.white),
+                                  ),
+                                );
+                              },
                             ),
                             Positioned(
                               bottom: 0,
@@ -73,10 +151,11 @@ class TouristSpotPicker {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                    const SizedBox(height: 5),
                                     Text(
-                                      '₱${spot.price}/Person',
+                                      'Date Added: ${spot.date}',
                                       style: GoogleFonts.comfortaa(
-                                        color: Colors.white,
+                                        color: Colors.white70,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -104,62 +183,6 @@ class TouristSpotPicker {
     );
   }
 
-  static Future<void> _showAvailableMaps(BuildContext context, String location, String name) async {
-    final availableMaps = await MapLauncher.installedMaps;
-
-    if (availableMaps.isNotEmpty) {
-      showModalBottomSheet(
-        context: context,
-        builder: (context) {
-          return Wrap(
-            children: availableMaps.map((map) {
-              return ListTile(
-                leading: Icon(Icons.map),
-                title: Text(map.mapName),
-                onTap: () async {
-                  Navigator.pop(context);
-                  try {
-                    // Parse coordinates from the location string
-                    final regex = RegExp(r'@([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)');
-                    final match = regex.firstMatch(location);
-
-                    if (match != null) {
-                      final latitude = double.tryParse(match.group(1) ?? '');
-                      final longitude = double.tryParse(match.group(2) ?? '');
-
-                      if (latitude != null && longitude != null) {
-                        await map.showDirections(
-                          destination: Coords(latitude, longitude),
-                          destinationTitle: name,
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Invalid coordinates.')),
-                        );
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Coordinates not found.')),
-                      );
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')),
-                    );
-                  }
-                },
-              );
-            }).toList(),
-          );
-        },
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No available map applications.')),
-      );
-    }
-  }
-
   static Future<List<TouristSpot>> _fetchTouristSpots() async {
     final DatabaseReference databaseRef = FirebaseDatabase.instance.ref('TouristSpot');
     final snapshot = await databaseRef.get();
@@ -172,12 +195,14 @@ class TouristSpotPicker {
     final data = snapshot.value as Map<dynamic, dynamic>?;
 
     if (data != null) {
-      return data.entries
-          .map((entry) => TouristSpot.fromMap(
-        entry.key as String,
-        entry.value as Map<dynamic, dynamic>,
-      ))
-          .toList();
+      return data.entries.map((entry) {
+        final spotData = entry.value as Map<dynamic, dynamic>;
+
+        return TouristSpot.fromMap(
+          entry.key as String,
+          spotData,
+        );
+      }).toList();
     } else {
       print('Data is null or empty in TouristSpot folder.');
       return [];

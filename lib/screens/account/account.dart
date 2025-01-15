@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:lb_tour/screens/account/user_booking_page.dart';
 
 import '../../ccontroller/booking_controller.dart';
@@ -29,7 +30,8 @@ class _AccountPageState extends State<AccountPage> {
     super.initState();
 
     // Print what was passed to AccountPage
-    print("AccountPage initialized with selectedStatus: ${widget.selectedStatus}");
+    print("AccountPage initialized with selectedStatus: ${widget
+        .selectedStatus}");
 
     // Initialize the controller and set its status if provided
     final bookingController = Get.put(BookingController());
@@ -59,7 +61,8 @@ class _AccountPageState extends State<AccountPage> {
   Future<void> _saveAvatarSelection(String avatarPath) async {
     final user = _auth.currentUser;
     if (user != null) {
-      await _databaseRef.child('users').child(user.uid).update({'avatar': avatarPath});
+      await _databaseRef.child('users').child(user.uid).update(
+          {'avatar': avatarPath});
       print("Avatar updated to: $avatarPath");
     }
   }
@@ -76,14 +79,16 @@ class _AccountPageState extends State<AccountPage> {
               scrollDirection: Axis.horizontal, // Enable horizontal scrolling
               child: Row(
                 children: List.generate(5, (index) {
-                  final avatarPath = 'assets/images/avatar/Avatar (${index + 1}).jpg';
+                  final avatarPath = 'assets/images/avatar/Avatar (${index +
+                      1}).jpg';
 
                   return GestureDetector(
                     onTap: () {
                       setState(() {
                         avatar = avatarPath;
                       });
-                      _saveAvatarSelection(avatarPath); // Save the selection to Firebase
+                      _saveAvatarSelection(
+                          avatarPath); // Save the selection to Firebase
                       Navigator.pop(context);
                     },
                     child: Padding(
@@ -108,7 +113,12 @@ class _AccountPageState extends State<AccountPage> {
     final bookingController = Get.put(BookingController());
 
     // Debugging selectedStatus on each rebuild
-    print("AccountPage rebuild with controller.selectedStatus: ${bookingController.selectedStatus}");
+    print(
+        "AccountPage rebuild with controller.selectedStatus: ${bookingController
+            .selectedStatus}");
+    print(
+        "AccountPage rebuild with controller.selectedStatus: ${bookingController
+            .selectedStatus}");
 
     return Scaffold(
       body: ListView(
@@ -204,11 +214,16 @@ class _AccountPageState extends State<AccountPage> {
     });
   }
 
-  Widget _buildBookingListContainer(BookingController controller, BuildContext context) {
+
+  Widget _buildBookingListContainer(BookingController controller,
+      BuildContext context) {
     return Obx(() {
-      final bookings = controller.bookings[controller.selectedStatus.value] ?? [];
+      final bookings = controller.bookings[controller.selectedStatus.value] ??
+          [];
       final limitedBookings = bookings.take(4).toList();
-      print("Bookings for status '${controller.selectedStatus.value}': $bookings");
+      print("Bookings for status '${controller.selectedStatus
+          .value}': $bookings");
+
       return Padding(
         padding: const EdgeInsets.only(left: 10.0, right: 10.0),
         child: Container(
@@ -233,26 +248,37 @@ class _AccountPageState extends State<AccountPage> {
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 )
-              else ...limitedBookings.map((booking) {
-                return GestureDetector(
-                  onTap: () {
-                    _showBookingDetails(context, booking);
-                  },
-                  child: ListTile(
-                    leading: const Icon(Icons.calendar_today),
-                    title: Text(booking['title']!),
-                    subtitle: Text(booking['date']!),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                  ),
-                );
-              }).toList(),
+              else
+                ...limitedBookings.map((booking) {
+                  // Parse the date string and format it
+                  String formattedDate = '';
+                  try {
+                    final parsedDate = DateTime.parse(booking['date']!);
+                    formattedDate = DateFormat('MMMM d, y').format(parsedDate);
+                  } catch (e) {
+                    formattedDate = 'Invalid date';
+                  }
+
+                  return GestureDetector(
+                    onTap: () {
+                      _showBookingDetails(context, booking);
+                    },
+                    child: ListTile(
+                      leading: const Icon(Icons.calendar_today),
+                      title: Text(booking['title']!),
+                      subtitle: Text(formattedDate),
+                      trailing: const Icon(Icons.arrow_forward_ios),
+                    ),
+                  );
+                }).toList(),
               if (bookings.length > 4)
                 TextButton(
                   onPressed: () {
-                    Get.to(() => AllBookingsPage(
-                      title: controller.selectedStatus.value,
-                      bookings: bookings,
-                    ));
+                    Get.to(() =>
+                        AllBookingsPage(
+                          title: controller.selectedStatus.value,
+                          bookings: bookings,
+                        ));
                   },
                   child: const Text('View All'),
                 ),
@@ -262,22 +288,54 @@ class _AccountPageState extends State<AccountPage> {
       );
     });
   }
-
   void _showBookingDetails(BuildContext context, Map<String, String> booking) {
+    // Debugging: Print the booking map to the console
+    print('Booking Map: $booking');
+
+    // Parse and format the date string
+    String formattedDate = 'Invalid date';
+    try {
+      if (booking['date'] != null) {
+        final parsedDate = DateTime.parse(booking['date']!);
+        formattedDate = DateFormat('MMMM d, y').format(parsedDate);
+      }
+    } catch (e) {
+      print('Error parsing date: $e');
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
+
+
         return AlertDialog(
-          title: Text(booking['title'] ?? 'Booking Details'),
+          title: Text(booking['touristName'] ?? 'Booking Details'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Date: ${booking['date'] ?? 'N/A'}'),
+              Text('Tourist Name: ${booking['touristName'] ?? 'N/A'}'), // Tourist name
               const SizedBox(height: 8),
-              Text('Status: ${booking['status'] ?? 'N/A'}'),
+              Text('Date: $formattedDate'), // Formatted date
               const SizedBox(height: 8),
-              Text('Description: ${booking['description'] ?? 'No details available'}'),
+              Text('Full Name: ${booking['fullName'] ?? 'N/A'}'), // Full name
+              const SizedBox(height: 8),
+              Text('Contact Number: ${booking['contactNumber'] ?? 'N/A'}'), // Contact number
+              const SizedBox(height: 8),
+              Text('Price: ${booking['price'] ?? 'N/A'}'), // Price
+              const SizedBox(height: 8),
+              Text('Status: ${booking['status'] ?? 'N/A'}'), // Status
+              const SizedBox(height: 8),
+              Text('Number of People: ${booking['numberOfPeople'] ?? 'N/A'}'), // Number of people
+              const SizedBox(height: 8),
+              Text('Address: ${booking['address'] ?? 'N/A'}'), // Address
+              const SizedBox(height: 8),
+              Text('Description: ${booking['description'] ?? 'No details available'}'), // Description
+              const SizedBox(height: 8),
+              Text('Email: ${booking['email'] ?? 'N/A'}'), // Email
+
+
+
             ],
           ),
           actions: [
@@ -292,6 +350,8 @@ class _AccountPageState extends State<AccountPage> {
       },
     );
   }
+
+
 
   Widget _buildLogoutButton(BuildContext context) {
     return Center(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../models/tourist_spot/tourist_spot_model.dart';
@@ -54,6 +53,7 @@ class _BookingPageState extends State<BookingPage> {
       }
     });
   }
+
   Future<void> _fetchUserBookings() async {
     try {
       User? user = widget.auth.currentUser;
@@ -104,7 +104,6 @@ class _BookingPageState extends State<BookingPage> {
       print("Error fetching user bookings: $e");
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -163,9 +162,15 @@ class _BookingPageState extends State<BookingPage> {
             controller: widget.numberOfPeopleController,
             hintText: 'Number of People',
             keyboardType: TextInputType.number,
-            validator: (value) => value == null || value.isEmpty
-                ? 'Please enter the number of people'
-                : null,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the number of people';
+              }
+              if (int.tryParse(value) == null || int.parse(value) <= 0) {
+                return 'Please enter a valid number';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 10),
 
@@ -200,15 +205,28 @@ class _BookingPageState extends State<BookingPage> {
                 return;
               }
 
+              // Parse and validate the number of people
+              final int? numberOfPeople = int.tryParse(widget.numberOfPeopleController.text);
+              if (numberOfPeople == null || numberOfPeople <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a valid number of people.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
               // Prepare the booking data
               final bookingData = {
-                'fullName': widget.fullnameController.text,
+                'fullname': widget.fullnameController.text,
                 'contactNumber': widget.contactNumberController.text,
                 'email': widget.emailController.text,
-                'numberOfPeople': widget.numberOfPeopleController.text,
-                'selectedDate': refreshedDate.toIso8601String(),
+                'numberOfPeople': numberOfPeople,
+                'date': refreshedDate.toIso8601String(),
                 'touristName': widget.spot.name,
                 'imageUrl': widget.spot.imageUrl,
+                'price': widget.spot.price,
                 'address': widget.spot.address,
                 'description': widget.spot.description,
                 'status': 'Pending',

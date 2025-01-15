@@ -10,10 +10,12 @@ class PanoramaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Virtual Tour'),
+        title: const Text('Virtual Tour',style: TextStyle(color: Colors.white),),
         backgroundColor: const Color.fromARGB(255, 14, 86, 170),
         leading: IconButton(
+          color: Colors.white,
           icon: const Icon(Icons.arrow_back),
+
           onPressed: () {
             Navigator.pop(context);
           },

@@ -11,7 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
-  await FirebaseAPI.initNotifications(); // Initialize FCM
+
 
   // Register AuthenticationRepository in GetX
   Get.put(AuthenticationRepository());

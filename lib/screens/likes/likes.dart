@@ -105,12 +105,20 @@ class TopRatedScreen extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => BookingScreen(spot: selectedSpot,initialPage: 1,),
+                                  builder: (context) => BookingScreen(
+                                    spot: selectedSpot,
+                                    initialPage: (selectedSpot.name == 'Olo Olo Mangrove Forest' || selectedSpot.name == 'Mt. Nalayag'|| selectedSpot.name == 'Lagadlarin Mangrove Forest') ? 1 : 0,
+                                  ),
                                 ),
                               );
                             }
                           },
-                          child: const Text("Book Now"),
+                          child: Text(
+                            (controller.selectedSpot.value?.name == 'Olo Olo Mangrove Forest' || controller.selectedSpot.value?.name == 'Lagadlarin Mangrove Forest')
+                                ? "Book Now"
+                                : "Check Tourist Spot",
+                            style: GoogleFonts.comfortaa(),
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Obx(() {

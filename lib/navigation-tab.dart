@@ -70,7 +70,7 @@ class TabNavigation extends StatelessWidget {
                         const SizedBox(width: 10),
                         Text(
                           'Lobo, Batangas',
-                          style: GoogleFonts.comfortaa(
+                          style: GoogleFonts.roboto(
                             fontSize: 14,
                             color: const Color.fromARGB(255, 0, 0, 0),
                           ),

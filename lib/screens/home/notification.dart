@@ -62,7 +62,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           'email': value['email'] ?? 'Unknown',
           'touristName': value['touristName'] ?? 'Unknown',
           'price': value['price'] ?? '0',
-          'selectedDate': value['selectedDate'] ?? '',
+          'date': value['date'] ?? '',
           'status': value['status'] ?? 'Unknown',
           'numberOfPeople': value['numberOfPeople'] ?? '0',
           'description': value['description'] ?? '',
@@ -207,7 +207,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                   ),
                                   const SizedBox(height: 5),
                                   Text(
-                                    "Date: ${booking['selectedDate'] != null && booking['selectedDate'].toString().isNotEmpty ? formatDate(booking['selectedDate'].toString()) : 'No date provided'}",
+                                    "Date: ${booking['date'] != null && booking['date'].toString().isNotEmpty ? formatDate(booking['date'].toString()) : 'No date provided'}",
                                     style: GoogleFonts.comfortaa(fontSize: 14),
                                   ),
                                   const SizedBox(height: 5),
