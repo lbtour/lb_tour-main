@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:lb_tour/screens/authentication/login.dart';
+import 'package:lb_tour/screens/authentication/register.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -14,6 +16,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
+  bool _isSent = false; // ✅ Track if reset email was sent
 
   var height, width;
 
@@ -23,7 +26,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     width = MediaQuery.of(context).size.width;
     return SafeArea(
       child: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -33,6 +36,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 20),
               _header(context),
               _inputField(context),
+              _actions(context), // ✅ Added buttons for Login & Sign Up
             ],
           ),
         ),
@@ -40,7 +44,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  _header(context) {
+  Widget _header(context) {
     return Column(
       children: [
         Image.asset(
@@ -50,15 +54,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         Text(
           "Forgot Password",
-          style: GoogleFonts.comfortaa(
+          style: GoogleFonts.roboto(
             fontSize: width * 0.068,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
         ),
         Text(
-          "Please enter your email.",
-          style: GoogleFonts.comfortaa(
+          "Enter your email to reset your password.",
+          style: GoogleFonts.roboto(
             color: Colors.black54,
           ),
         ),
@@ -75,7 +79,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           controller: _emailController,
           cursorColor: Colors.black54,
           decoration: InputDecoration(
-            hintStyle: GoogleFonts.comfortaa(color: Colors.black54),
+            hintStyle: GoogleFonts.roboto(color: Colors.black54),
             hintText: "Email Address",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
@@ -104,13 +108,63 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: _isLoading
               ? const CircularProgressIndicator(color: Colors.white)
               : Text(
-                  "Send Password Reset",
-                  style: GoogleFonts.comfortaa(
-                    color: Colors.white,
-                  ),
-                ),
+            _isSent ? "Resend Password Reset" : "Send Password Reset",
+            style: GoogleFonts.roboto(
+              color: Colors.white,
+            ),
+          ),
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _actions(BuildContext context) {
+    return Column(
+      children: [
+        TextButton(
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          },
+          child: Text(
+            "Back to Login",
+            style: GoogleFonts.roboto(
+              fontSize: width * 0.035,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Don't have an account?",
+              style: GoogleFonts.roboto(
+                fontSize: width * 0.032,
+                color: Colors.black,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                );
+              },
+              child: Text(
+                "Sign up here!",
+                style: GoogleFonts.roboto(
+                  fontSize: width * 0.032,
+                  color: Colors.black54,
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -120,6 +174,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter your email address.'),
+          backgroundColor: Colors.red,
         ),
       );
       return;
@@ -132,15 +187,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset email sent. Check your inbox.'),
+        SnackBar(
+          content: const Text('Password reset email sent. Check your inbox.'),
+          backgroundColor: Colors.green,
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
         ),
       );
+
+      // ✅ Change button text to "Resend Password Reset"
+      setState(() {
+        _isSent = true;
+      });
+
       _emailController.clear(); // Clear email field after successful action
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.message ?? 'Failed to send password reset email.'),
+          backgroundColor: Colors.red,
         ),
       );
     } finally {
