@@ -15,7 +15,7 @@ class TouristSpotPicker {
       context: context,
       builder: (BuildContext context) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(20.0,150,20,150),
+          padding: const EdgeInsets.fromLTRB(20.0,150,20,100),
           child: Container(
             decoration: BoxDecoration(
             ),
@@ -111,7 +111,7 @@ class TouristSpotPicker {
                         },
                       ),
                     ),
-                    SizedBox(height: 20,),
+                    SizedBox(height: 10,),
                     // Close Button
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
@@ -125,7 +125,7 @@ class TouristSpotPicker {
                       ),
 
                     ),
-                    SizedBox(height: 10,),
+                    SizedBox(height: 5,),
                   ],
                 ),
               ),
