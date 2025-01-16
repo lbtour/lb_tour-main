@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/tourist_spot/tourist_spot_model.dart';
+import '../../pop_up/homescreen/TouristSpotPicker.dart';
 import '../discover/booking.dart';
 import '../../pop_up/homescreen/pick_tourist_spot_popup.dart' as popup;
 
@@ -118,7 +119,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Carousel Image
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 8),
-                  height: 350,
+                  height: MediaQuery
+                      .of(context)
+                      .size
+                      .height * 0.45,
                   width: MediaQuery
                       .of(context)
                       .size
@@ -140,13 +144,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 // Tourist Spot Name
                 Text(
                   spot.name,
-                  style: GoogleFonts.comfortaa(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: GoogleFonts.roboto(
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal,
                     color: const Color.fromARGB(255, 14, 86, 170),
                   ),
                   textAlign: TextAlign.center,
@@ -210,15 +214,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               'Where do you want to go?',
-                              style: GoogleFonts.comfortaa(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                              style: GoogleFonts.roboto(
+                                fontSize: 24,
+                                fontWeight: FontWeight.normal,
                                 color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 10),
                             GestureDetector(
-                              onTap: () => popup.TouristSpotPicker.show(context),
+                              onTap: () => TouristSpotPicker.show(context),
                               child: Container(
                                 width: 220,
                                 padding: const EdgeInsets.all(10),
@@ -227,13 +231,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 child: Card(
                                   elevation: 6,
-                                  child: SizedBox(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+
+                                    ),
                                     height: 50,
                                     width: double.infinity,
                                     child: Center(
                                       child: Text(
                                         "Pick Tourist Spot",
-                                        style: const TextStyle(fontSize: 18),
+                                        style:  GoogleFonts.roboto(fontSize: 18),
                                       ),
                                     ),
                                   ),
@@ -257,3 +264,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
