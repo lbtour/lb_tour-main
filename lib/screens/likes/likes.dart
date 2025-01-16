@@ -17,12 +17,24 @@ class TopRatedScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(existingFeedback == null ? "Add Feedback" : "Edit Feedback"),
+        backgroundColor: Theme.of(context).dialogBackgroundColor, // ✅ Match theme
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15), // ✅ Smooth rounded corners
+        ),
+        title: Text(
+          existingFeedback == null ? "Add Feedback" : "Edit Feedback",
+          style: GoogleFonts.roboto(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: feedbackController,
-          decoration: const InputDecoration(
+          maxLines: 3,
+          style: GoogleFonts.roboto(fontSize: 16),
+          decoration: InputDecoration(
             hintText: "Write your feedback...",
-            border: OutlineInputBorder(),
+            hintStyle: GoogleFonts.roboto(color: Colors.grey),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         ),
         actions: [
@@ -33,16 +45,23 @@ class TopRatedScreen extends StatelessWidget {
                 Navigator.pop(context);
               }
             },
-            child: Text(existingFeedback == null ? "Submit" : "Update"),
+            child: Text(
+              existingFeedback == null ? "Submit" : "Update",
+              style: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: Text(
+              "Cancel",
+              style: GoogleFonts.roboto(fontSize: 16, color: Colors.red),
+            ),
           ),
         ],
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -162,94 +181,52 @@ class TopRatedScreen extends StatelessWidget {
                         }
 
                         final userId = FirebaseAuth.instance.currentUser?.uid;
+                        final hasFeedback = userId != null &&
+                            controller.feedbacks[spot.id]?.any((feedback) => feedback.fullName == controller.fullName.value) == true;
 
-                        return FutureBuilder<bool>(
-                          future: userId != null ? controller.doesUserHaveFeedback(spot.id) : Future.value(false),
-                          builder: (context, snapshot) {
-                            final buttonStyle = ElevatedButton.styleFrom(
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.all(Radius.circular(30)),
+                            border: Border.all(color: Color.fromARGB(255, 14, 86, 170)),
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               shadowColor: Colors.transparent,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0), // Consistent padding
-                            );
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                            ),
+                            onPressed: () async {
+                              String? existingFeedback;
 
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                                  border: Border.all(color: Color.fromARGB(255, 14, 86, 170)),
-                                ),
-                                child: ElevatedButton(
-                                  style: buttonStyle,
-                                  onPressed: null,
-                                  child: Text(
-                                    "Checking...",
-                                    style: GoogleFonts.comfortaa(
-                                      textStyle: TextStyle(fontSize: 16, color: Color.fromARGB(255, 14, 86, 170)),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            } else if (snapshot.hasData && snapshot.data == true) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                                  border: Border.all(color: Color.fromARGB(255, 14, 86, 170)),
-                                ),
-                                child: ElevatedButton(
-                                  style: buttonStyle,
-                                  onPressed: () async {
-                                    final feedbackList = controller.getFeedbackForSpot(spot.id);
-                                    String? existingFeedback;
+                              if (hasFeedback) {
+                                final feedbackList = controller.getFeedbackForSpot(spot.id);
+                                if (feedbackList != null && userId != null) {
+                                  final userFullName = await controller.getUserFullName(userId);
+                                  final feedback = feedbackList.firstWhere(
+                                        (feedback) => feedback.fullName == userFullName,
+                                    orElse: () => UserFeedback(fullName: '', message: ''),
+                                  );
+                                  existingFeedback = feedback.message.isNotEmpty ? feedback.message : null;
+                                }
+                              }
 
-                                    if (feedbackList != null && userId != null) {
-                                      final userFullName = await controller.getUserFullName(userId);
-                                      final feedback = feedbackList.firstWhere(
-                                            (feedback) => feedback.fullName == userFullName,
-                                        orElse: () => UserFeedback(fullName: '', message: ''),
-                                      );
-                                      existingFeedback = feedback.message.isNotEmpty ? feedback.message : null;
-                                    }
-
-                                    showFeedbackForm(context, spot, existingFeedback: existingFeedback);
-                                  },
-                                  child: Text(
-                                    "Edit Feedback",
-                                    style: GoogleFonts.roboto(
-                                      textStyle: TextStyle(fontSize: 16, color: Color.fromARGB(255, 14, 86, 170)),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            } else {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                                  border: Border.all(color: Color.fromARGB(255, 14, 86, 170)),
-                                ),
-                                child: ElevatedButton(
-                                  style: buttonStyle,
-                                  onPressed: () {
-                                    showFeedbackForm(context, spot);
-                                  },
-                                  child: Text(
-                                    "Add Feedback",
-                                    style: GoogleFonts.roboto(
-                                      textStyle: TextStyle(fontSize: 16, color: Color.fromARGB(255, 14, 86, 170)),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                          },
+                              showFeedbackForm(context, spot, existingFeedback: existingFeedback);
+                            },
+                            child: Text(
+                              hasFeedback ? "Edit Feedback" : "Add Feedback",
+                              style: GoogleFonts.roboto(
+                                textStyle: TextStyle(fontSize: 16, color: Color.fromARGB(255, 14, 86, 170)),
+                              ),
+                            ),
+                          ),
                         );
-                      }),
+                      })
+
                     ],
                   ),
 
