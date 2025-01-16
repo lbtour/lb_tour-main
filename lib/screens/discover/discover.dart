@@ -106,15 +106,15 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             children: [
                               Text(
                                 spot.name,
-                                style: GoogleFonts.comfortaa(
+                                style: GoogleFonts.roboto(
                                   color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.normal,
                                 ),
                               ),
                               Text(
                                 '₱${spot.price}/Person',
-                                style: GoogleFonts.comfortaa(
+                                style: GoogleFonts.roboto(
                                   color: Colors.white,
                                   fontSize: 16,
                                 ),

@@ -9,7 +9,7 @@ class TouristSpot {
   final String address;
   final String imageUrl;
   final String description;
-  final String date; // Replaced formattedDate with date
+  final String date;
   final String price;
 
   TouristSpot({
@@ -22,168 +22,106 @@ class TouristSpot {
     required this.price,
   });
 
-  // fromMap method to parse data from Firebase
   factory TouristSpot.fromMap(String id, Map<dynamic, dynamic> data) {
     return TouristSpot(
       id: id,
-      name: data['name'] ?? 'N/A',
+      name: data['touristName'] ?? 'N/A',
       address: data['address'] ?? 'N/A',
       imageUrl: data['imageUrl'] ?? '',
       description: data['description'] ?? 'No description available',
-      date: data['date'] ?? 'N/A', // Directly map the date field
-      price: data['price'] ?? 'N/A',
+      date: data['date'] ?? 'N/A',
+      price: data['price'] ?? '0',
     );
   }
 }
 
-class TouristSpotPicker {
-  static Future<void> show(BuildContext context) async {
-    final spots = await _fetchTouristSpots();
+class TouristSpotService {
+  static Future<void> openMap(BuildContext context, String address, String name) async {
+    final availableMaps = await MapLauncher.installedMaps;
 
-    if (spots.isEmpty) {
-      // Show dialog if no tourist spots are available
-      showDialog(
+    if (availableMaps.isNotEmpty) {
+      showModalBottomSheet(
         context: context,
-        builder: (BuildContext context) => AlertDialog(
-          title: Text('No Tourist Spots Available'),
-          content: Text('There are no tourist spots to display.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Close'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
-    // Show tourist spots in a dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Pick a Tourist Spot'),
-          content: Container(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: spots.length,
-              itemBuilder: (context, index) {
-                final spot = spots[index];
-                return Card(
-                  elevation: 4,
-                  clipBehavior: Clip.antiAlias,
-                  margin: const EdgeInsets.symmetric(vertical: 5),
-                  child: InkWell(
-                    onTap: () {
-                      // Show spot details in a dialog
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text(spot.name),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Name: ${spot.name}'),
-                                const SizedBox(height: 8),
-                                Text('Address: ${spot.address}'),
-                                const SizedBox(height: 8),
-                                Text('Price: ${spot.price}'),
-                                const SizedBox(height: 8),
-                                Text('Description: ${spot.description}'),
-                                const SizedBox(height: 8),
-                                Text('Date Added: ${spot.date}'),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    child: Column(
-                      children: [
-                        Stack(
-                          children: [
-                            // Display network image with fallback
-                            Image.network(
-                              spot.imageUrl.isNotEmpty
-                                  ? spot.imageUrl
-                                  : 'https://via.placeholder.com/150',
-                              fit: BoxFit.cover,
-                              height: 150,
-                              width: double.infinity,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  height: 150,
-                                  width: double.infinity,
-                                  color: Colors.grey,
-                                  child: Center(
-                                    child: Icon(Icons.error, color: Colors.white),
-                                  ),
-                                );
-                              },
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                color: Colors.black.withOpacity(0.5),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      spot.name,
-                                      style: GoogleFonts.comfortaa(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      'Date Added: ${spot.date}',
-                                      style: GoogleFonts.comfortaa(
-                                        color: Colors.white70,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+        builder: (context) {
+          return Wrap(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Choose a map',
+                  style: GoogleFonts.roboto(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
+              ),
+              ...availableMaps.map((map) {
+                // Assign the custom icons based on the map name
+                String iconPath;
+                if (map.mapName.toLowerCase().contains('google')) {
+                  iconPath = 'assets/images/maps_icon/google_maps.png';
+                } else if (map.mapName.toLowerCase().contains('waze')) {
+                  iconPath = 'assets/images/maps_icon/waze.png';
+                } else {
+                  iconPath = ''; // Fallback for unknown map apps
+                }
+
+                return ListTile(
+                  leading: iconPath.isNotEmpty
+                      ? Image.asset(
+                    iconPath,
+                    width: 32, // Set the desired width
+                    height: 32, // Set the desired height
+                    fit: BoxFit.cover,
+                  )
+                      : const Icon(Icons.map), // Default icon for unsupported apps
+                  title: Text(map.mapName),
+                  onTap: () async {
+                    Navigator.pop(context); // Close modal
+                    try {
+                      // Extract coordinates from the location string
+                      final regex = RegExp(r'@([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)');
+                      final match = regex.firstMatch(address);
+
+                      if (match != null) {
+                        final latitude = double.tryParse(match.group(1) ?? '');
+                        final longitude = double.tryParse(match.group(2) ?? '');
+
+                        if (latitude != null && longitude != null) {
+                          await map.showDirections(
+                            destination: Coords(latitude, longitude),
+                            destinationTitle: name,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Invalid coordinates.')),
+                          );
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Coordinates not found.')),
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  },
                 );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
+              }).toList(),
+            ],
+          );
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No available map applications.')),
+      );
+    }
   }
 
-  static Future<List<TouristSpot>> _fetchTouristSpots() async {
+  static Future<List<TouristSpot>> fetchTouristSpots() async {
     final DatabaseReference databaseRef = FirebaseDatabase.instance.ref('TouristSpot');
     final snapshot = await databaseRef.get();
 
@@ -197,11 +135,7 @@ class TouristSpotPicker {
     if (data != null) {
       return data.entries.map((entry) {
         final spotData = entry.value as Map<dynamic, dynamic>;
-
-        return TouristSpot.fromMap(
-          entry.key as String,
-          spotData,
-        );
+        return TouristSpot.fromMap(entry.key as String, spotData);
       }).toList();
     } else {
       print('Data is null or empty in TouristSpot folder.');

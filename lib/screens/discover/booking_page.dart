@@ -114,12 +114,12 @@ class _BookingPageState extends State<BookingPage> {
         children: [
           const Divider(),
           Text(widget.spot.name,
-              style: GoogleFonts.comfortaa(
-                  fontSize: 18, fontWeight: FontWeight.bold)),
+              style: GoogleFonts.roboto(
+                  fontSize: 22, fontWeight: FontWeight.bold)),
           const Divider(),
           Text("Booking Form",
-              style: GoogleFonts.comfortaa(
-                  fontSize: 18, fontWeight: FontWeight.bold)),
+              style: GoogleFonts.roboto(
+                  fontSize:20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
 
           // Booking Status Display
@@ -141,6 +141,7 @@ class _BookingPageState extends State<BookingPage> {
           ),
           const SizedBox(height: 10),
           buildTextField(
+
             controller: widget.contactNumberController,
             hintText: 'Contact Number',
             keyboardType: TextInputType.phone,
@@ -172,122 +173,131 @@ class _BookingPageState extends State<BookingPage> {
               return null;
             },
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 20),
 
           // Submit Booking Button
-          ElevatedButton(
-            onPressed: () async {
-              // Refresh the selectedDate value before validation
-              final DateTime? refreshedDate = widget.selectedDate;
+          Container(
+    width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
 
-              // Check if a date is selected
-              if (refreshedDate == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please select a date.'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
+                
+                borderRadius: BorderRadius.all(Radius.circular(30)),
+                border: Border.all(color: Color.fromARGB(255, 14, 86, 170),width: 2,)),
+            child: ElevatedButton(
+              onPressed: () async {
+                // Refresh the selectedDate value before validation
+                final DateTime? refreshedDate = widget.selectedDate;
 
-              // Check if all fields are filled out
-              if (widget.fullnameController.text.isEmpty ||
-                  widget.contactNumberController.text.isEmpty ||
-                  widget.emailController.text.isEmpty ||
-                  widget.numberOfPeopleController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please fill out all fields.'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
+                // Check if a date is selected
+                if (refreshedDate == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select a date.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
 
-              // Parse and validate the number of people
-              final int? numberOfPeople = int.tryParse(widget.numberOfPeopleController.text);
-              if (numberOfPeople == null || numberOfPeople <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a valid number of people.'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
+                // Check if all fields are filled out
+                if (widget.fullnameController.text.isEmpty ||
+                    widget.contactNumberController.text.isEmpty ||
+                    widget.emailController.text.isEmpty ||
+                    widget.numberOfPeopleController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill out all fields.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
 
-              // Prepare the booking data
-              final bookingData = {
-                'fullname': widget.fullnameController.text,
-                'contactNumber': widget.contactNumberController.text,
-                'email': widget.emailController.text,
-                'numberOfPeople': numberOfPeople,
-                'date': refreshedDate.toIso8601String(),
-                'touristName': widget.spot.name,
-                'imageUrl': widget.spot.imageUrl,
-                'price': widget.spot.price,
-                'address': widget.spot.address,
-                'description': widget.spot.description,
-                'status': 'Pending',
-              };
+                // Parse and validate the number of people
+                final int? numberOfPeople = int.tryParse(widget.numberOfPeopleController.text);
+                if (numberOfPeople == null || numberOfPeople <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a valid number of people.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
 
-              try {
-                final User? user = widget.auth.currentUser;
-                if (user != null) {
-                  // Check if a booking already exists for the selected date
-                  final snapshot = await widget.databaseRef
-                      .child('Booking')
-                      .child(user.uid)
-                      .orderByChild('selectedDate')
-                      .equalTo(refreshedDate.toIso8601String())
-                      .get();
+                // Prepare the booking data
+                final bookingData = {
+                  'fullname': widget.fullnameController.text,
+                  'contactNumber': widget.contactNumberController.text,
+                  'email': widget.emailController.text,
+                  'numberOfPeople': numberOfPeople,
+                  'date': refreshedDate.toIso8601String(),
+                  'touristName': widget.spot.name,
+                  'imageUrl': widget.spot.imageUrl,
+                  'price': widget.spot.price,
+                  'address': widget.spot.address,
+                  'description': widget.spot.description,
+                  'status': 'Pending',
+                };
 
-                  if (snapshot.exists) {
+                try {
+                  final User? user = widget.auth.currentUser;
+                  if (user != null) {
+                    // Check if a booking already exists for the selected date
+                    final snapshot = await widget.databaseRef
+                        .child('Booking')
+                        .child(user.uid)
+                        .orderByChild('selectedDate')
+                        .equalTo(refreshedDate.toIso8601String())
+                        .get();
+
+                    if (snapshot.exists) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('You already have a booking for the selected date.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Save the booking if no existing booking is found
+                    await widget.databaseRef
+                        .child('Booking')
+                        .child(user.uid)
+                        .push()
+                        .set(bookingData);
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('You already have a booking for the selected date.'),
+                        content: Text('Booking saved successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+
+                    // Navigate to TabNavigation screen
+                    Get.offAll(() => TabNavigation());
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please log in to save a booking.'),
                         backgroundColor: Colors.red,
                       ),
                     );
-                    return;
                   }
-
-                  // Save the booking if no existing booking is found
-                  await widget.databaseRef
-                      .child('Booking')
-                      .child(user.uid)
-                      .push()
-                      .set(bookingData);
-
+                } catch (error) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Booking saved successfully!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-
-                  // Navigate to TabNavigation screen
-                  Get.offAll(() => TabNavigation());
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please log in to save a booking.'),
+                      content: Text('Failed to save booking.'),
                       backgroundColor: Colors.red,
                     ),
                   );
                 }
-              } catch (error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to save booking.'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('Submit Booking'),
+              },
+              child: Text('Submit Booking', style: GoogleFonts.roboto(fontSize: 16,fontWeight: FontWeight.bold, color: Color.fromARGB(255, 14, 86, 170),),),
+            ),
           ),
+          SizedBox(height: 20,),
 
         ],
       ),

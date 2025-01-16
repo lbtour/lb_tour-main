@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // For current user ID
 import 'package:lb_tour/screens/discover/booking.dart';
+import 'package:lb_tour/screens/likes/feedbackexpansiontile.dart';
 import '../../ccontroller/tourist_controller.dart';
 import '../../models/feedback/user_feedback_model.dart';
 import '../../models/tourist_spot/tourist_spot_model.dart';
@@ -76,29 +77,52 @@ class TopRatedScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              spot.name,
-                              style: GoogleFonts.comfortaa(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Text(
+                                spot.name.length > 50 ? '${spot.name.substring(0, 50)}...' : spot.name,
+                                style: GoogleFonts.roboto(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis, // Ensures text gets truncated
+                                maxLines: 1, // Limits to a single line
                               ),
                             ),
+                            SizedBox(width: 5,),
                             Text(
                               '₱${spot.price}/Person',
-                              style: GoogleFonts.comfortaa(
+                              style: GoogleFonts.roboto(
                                 fontSize: 18,
                                 color: Colors.green,
                               ),
                             ),
                           ],
                         ),
+
                         const SizedBox(height: 5),
                         Text(
                           '${spot.likes} Likes',
-                          style: GoogleFonts.comfortaa(fontSize: 16),
+                          style: GoogleFonts.roboto(fontSize: 16),
                         ),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
+                        const SizedBox(height: 5),Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          border: Border.all(color: Color.fromARGB(255, 14, 86, 170)), // Border color
+                        ),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent, // Background color of the button
+                            shadowColor: Colors.transparent, // Remove shadow
+                            elevation: 0, // Remove elevation
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30), // Match container's radius
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0), // Consistent padding
+                          ),
                           onPressed: () {
                             final selectedSpot = controller.selectedSpot.value;
                             if (selectedSpot != null) {
@@ -107,41 +131,78 @@ class TopRatedScreen extends StatelessWidget {
                                 MaterialPageRoute(
                                   builder: (context) => BookingScreen(
                                     spot: selectedSpot,
-                                    initialPage: (selectedSpot.name == 'Olo Olo Mangrove Forest' || selectedSpot.name == 'Mt. Nalayag'|| selectedSpot.name == 'Lagadlarin Mangrove Forest') ? 1 : 0,
+                                    initialPage: (selectedSpot.name == 'Olo Olo Mangrove Forest' ||
+                                        selectedSpot.name == 'Mt. Nalayag' ||
+                                        selectedSpot.name == 'Lagadlarin Mangrove Forest')
+                                        ? 1
+                                        : 0,
                                   ),
                                 ),
                               );
                             }
                           },
                           child: Text(
-                            (controller.selectedSpot.value?.name == 'Olo Olo Mangrove Forest' || controller.selectedSpot.value?.name == 'Lagadlarin Mangrove Forest')
+                            (controller.selectedSpot.value?.name == 'Olo Olo Mangrove Forest' ||
+                                controller.selectedSpot.value?.name == 'Lagadlarin Mangrove Forest')
                                 ? "Book Now"
                                 : "Check Tourist Spot",
-                            style: GoogleFonts.comfortaa(),
+                            style: GoogleFonts.roboto(
+                              textStyle: TextStyle(
+                                fontSize: 16,
+                                color: Color.fromARGB(255, 14, 86, 170), // Text color matches border
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Obx(() {
-                          final spot = controller.selectedSpot.value;
-                          if (spot == null) {
-                            return const SizedBox.shrink();
-                          }
+                      ),
+                      Obx(() {
+                        final spot = controller.selectedSpot.value;
+                        if (spot == null) {
+                          return const SizedBox.shrink();
+                        }
 
-                          final userId = FirebaseAuth.instance.currentUser?.uid;
+                        final userId = FirebaseAuth.instance.currentUser?.uid;
 
-                          return FutureBuilder<bool>(
-                            future: userId != null ? controller.doesUserHaveFeedback(spot.id) : Future.value(false),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return ElevatedButton(
+                        return FutureBuilder<bool>(
+                          future: userId != null ? controller.doesUserHaveFeedback(spot.id) : Future.value(false),
+                          builder: (context, snapshot) {
+                            final buttonStyle = ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0), // Consistent padding
+                            );
+
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                                  border: Border.all(color: Color.fromARGB(255, 14, 86, 170)),
+                                ),
+                                child: ElevatedButton(
+                                  style: buttonStyle,
                                   onPressed: null,
                                   child: Text(
                                     "Checking...",
-                                    style: GoogleFonts.comfortaa(),
+                                    style: GoogleFonts.comfortaa(
+                                      textStyle: TextStyle(fontSize: 16, color: Color.fromARGB(255, 14, 86, 170)),
+                                    ),
                                   ),
-                                );
-                              } else if (snapshot.hasData && snapshot.data == true) {
-                                return ElevatedButton(
+                                ),
+                              );
+                            } else if (snapshot.hasData && snapshot.data == true) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                                  border: Border.all(color: Color.fromARGB(255, 14, 86, 170)),
+                                ),
+                                child: ElevatedButton(
+                                  style: buttonStyle,
                                   onPressed: () async {
                                     final feedbackList = controller.getFeedbackForSpot(spot.id);
                                     String? existingFeedback;
@@ -159,39 +220,48 @@ class TopRatedScreen extends StatelessWidget {
                                   },
                                   child: Text(
                                     "Edit Feedback",
-                                    style: GoogleFonts.comfortaa(),
+                                    style: GoogleFonts.roboto(
+                                      textStyle: TextStyle(fontSize: 16, color: Color.fromARGB(255, 14, 86, 170)),
+                                    ),
                                   ),
-                                );
-                              } else {
-                                return ElevatedButton(
+                                ),
+                              );
+                            } else {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                                  border: Border.all(color: Color.fromARGB(255, 14, 86, 170)),
+                                ),
+                                child: ElevatedButton(
+                                  style: buttonStyle,
                                   onPressed: () {
                                     showFeedbackForm(context, spot);
                                   },
                                   child: Text(
                                     "Add Feedback",
-                                    style: GoogleFonts.comfortaa(),
+                                    style: GoogleFonts.roboto(
+                                      textStyle: TextStyle(fontSize: 16, color: Color.fromARGB(255, 14, 86, 170)),
+                                    ),
                                   ),
-                                );
-                              }
-                            },
-                          );
-                        }),
+                                ),
+                              );
+                            }
+                          },
+                        );
+                      }),
+                    ],
+                  ),
+
+
+                      const SizedBox(height: 5),
 
 
 
 
 
-                        const SizedBox(height: 10),
-                        ExpansionTile(
-                          title: const Text("View Feedbacks"),
-                          children: controller.getFeedbackForSpot(spot.id)?.map((feedback) {
-                            return ListTile(
-                              title: Text(feedback.fullName), // Display full name
-                              subtitle: Text(feedback.message),
-                            );
-                          }).toList() ??
-                              [const Text("No feedback available")],
-                        ),
+FeedbackWidget(),
+
 
                       ],
                     ),
@@ -236,15 +306,15 @@ class TopRatedScreen extends StatelessWidget {
                                     children: [
                                       Text(
                                         spot.name,
-                                        style: GoogleFonts.comfortaa(
+                                        style: GoogleFonts.roboto(
                                           color: Colors.white,
-                                          fontSize: 18,
+                                          fontSize: 22,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       Text(
                                         '₱${spot.price}/Person',
-                                        style: GoogleFonts.comfortaa(
+                                        style: GoogleFonts.roboto(
                                           color: Colors.white,
                                           fontSize: 16,
                                         ),

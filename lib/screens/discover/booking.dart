@@ -138,9 +138,9 @@ class _BookingScreenState extends State<BookingScreen> {
             builder: (context, availableHour, child) {
               return Text(
                 "Available Hours: $availableHour",
-                style: GoogleFonts.comfortaa(
+                style: GoogleFonts.roboto(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.normal,
                   color: Colors.black,
                 ),
               );
@@ -170,35 +170,29 @@ class _BookingScreenState extends State<BookingScreen> {
                     children: [
                       Text(
                         "Selected Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
-                        style: GoogleFonts.comfortaa(
-                          fontSize: 18,
+                        style: GoogleFonts.roboto(
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 5),
-                      Text(
-                        _userBookings[selectedDate] ?? "Available.",
-                        style: GoogleFonts.comfortaa(
-                          fontSize: 14,
-                          color: Colors.green,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
+
                       ValueListenableBuilder<String>(
                         valueListenable: _availableHourNotifier,
                         builder: (context, availableHour, child) {
                           return Text(
                             "Visiting Hours: $availableHour",
-                            style: GoogleFonts.comfortaa(
-                              fontSize: 14,
+                            style: GoogleFonts.roboto(
+                              fontSize: 18,
                               color: Colors.black,
                             ),
                           );
                         },
                       ),
+                      const SizedBox(height: 5),
                       Text(
                         "Activities:",
-                        style: GoogleFonts.comfortaa(
+                        style: GoogleFonts.roboto(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -210,7 +204,7 @@ class _BookingScreenState extends State<BookingScreen> {
                             if (activities.isEmpty) {
                               return Text(
                                 "No activities available",
-                                style: GoogleFonts.comfortaa(
+                                style: GoogleFonts.roboto(
                                   fontSize: 14,
                                   color: Colors.grey,
                                 ),
@@ -221,8 +215,8 @@ class _BookingScreenState extends State<BookingScreen> {
                               children: activities.map((activity) {
                                 return Text(
                                   "- ${activity['title']}",
-                                  style: GoogleFonts.comfortaa(
-                                    fontSize: 14,
+                                  style: GoogleFonts.roboto(
+                                    fontSize: 16,
                                     color: Colors.black,
                                   ),
                                 );
@@ -237,9 +231,9 @@ class _BookingScreenState extends State<BookingScreen> {
                   return Center(
                     child: Text(
                       "No date selected",
-                      style: GoogleFonts.comfortaa(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+
                       ),
                     ),
                   );
@@ -260,14 +254,14 @@ class _BookingScreenState extends State<BookingScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                   color: Colors.grey[200],
-                  border: Border.all(color: Colors.blueAccent),
+                  border: Border.all(color: Color.fromARGB(255, 14, 86, 170)),
                 ),
                 child: Text(
                   "Select Date",
-                  style: GoogleFonts.comfortaa(
+                  style: GoogleFonts.roboto(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
+                    color: Color.fromARGB(255, 14, 86, 170),
                   ),
                 ),
               ),
@@ -383,8 +377,8 @@ class _BookingScreenState extends State<BookingScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(widget.spot.name,
-            style: GoogleFonts.comfortaa(
-                fontSize: 18, fontWeight: FontWeight.bold)),
+            style: GoogleFonts.roboto(
+                fontSize: 20, fontWeight: FontWeight.normal)),
         backgroundColor: Colors.transparent,
         leading: GestureDetector(
           onTap: () {
@@ -432,7 +426,7 @@ class _BookingScreenState extends State<BookingScreen> {
             ? const Color.fromARGB(255, 14, 86, 170)
             : Colors.grey,
       ),
-      child: Text(label, style: GoogleFonts.comfortaa(color: Colors.white)),
+      child: Text(label, style: GoogleFonts.roboto(color: Colors.white, fontSize: 18,)),
     );
   }
 }

@@ -36,17 +36,18 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
           const Divider(),
           Text(
             widget.spot.name,
-            style: GoogleFonts.comfortaa(
-              fontSize: 18,
+            style: GoogleFonts.roboto(
+              fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
           const Divider(),
+
           Text(
             "Activities",
-            style: GoogleFonts.comfortaa(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
+            style: GoogleFonts.roboto(
+              fontSize: 20,
+              fontWeight: FontWeight.bold
             ),
           ),
           const SizedBox(height: 10),
@@ -63,7 +64,7 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
               },
               child: Card(
                 color: isSelected
-                    ? Colors.blueAccent.withOpacity(0.2)
+                    ? Color.fromARGB(255, 14, 86, 170)
                     : Colors.white,
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
@@ -78,16 +79,22 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
                   ),
                   title: Text(
                     activity.title,
-                    style: GoogleFonts.comfortaa(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    style: GoogleFonts.roboto(
+                      color: isSelected
+                          ? Colors.white
+                          : Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
                     ),
                   ),
-                  trailing: isSelected
-                      ? const Icon(
+                  trailing:
+                       Icon(
                     Icons.check_circle,
-                    color: Colors.blueAccent,
+                    color: isSelected
+                        ? Colors.white
+                        : Colors.black45,
                   )
-                      : null,
+
                 ),
               ),
             );

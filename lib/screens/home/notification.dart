@@ -108,7 +108,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           },
           child: const HugeIcon(
             icon: HugeIcons.strokeRoundedArrowLeft02,
-            color: Colors.black,
+            color: Color.fromARGB(255, 14, 86, 170),
             size: 24.0,
           ),
         ),
@@ -122,9 +122,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
             const SizedBox(width: 10),
             Text(
               "Notifications",
-              style: GoogleFonts.comfortaa(
-                fontSize: 14,
-                color: Colors.black,
+              style: GoogleFonts.roboto(
+                fontSize: 22,
+                color: Color.fromARGB(255, 14, 86, 170),
+                textStyle: TextStyle(fontWeight: FontWeight.normal)
               ),
             ),
           ],
@@ -195,7 +196,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 children: [
                                   Text(
                                     booking['touristName'],
-                                    style: GoogleFonts.comfortaa(
+                                    style: GoogleFonts.roboto(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -203,17 +204,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                   const SizedBox(height: 5),
                                   Text(
                                     "Booked by: ${booking['fullName']}",
-                                    style: GoogleFonts.comfortaa(fontSize: 14),
+                                    style: GoogleFonts.roboto(fontSize: 14),
                                   ),
                                   const SizedBox(height: 5),
                                   Text(
                                     "Date: ${booking['date'] != null && booking['date'].toString().isNotEmpty ? formatDate(booking['date'].toString()) : 'No date provided'}",
-                                    style: GoogleFonts.comfortaa(fontSize: 14),
+                                    style: GoogleFonts.roboto(fontSize: 14),
                                   ),
                                   const SizedBox(height: 5),
                                   Text(
                                     "Status: ${booking['status']}",
-                                    style: GoogleFonts.comfortaa(
+                                    style: GoogleFonts.roboto(
                                       fontSize: 14,
                                       color: booking['status'] == "Pending"
                                           ? Colors.orange

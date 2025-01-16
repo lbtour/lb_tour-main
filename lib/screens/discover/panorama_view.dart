@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:panorama_viewer/panorama_viewer.dart';
 
 class PanoramaPage extends StatelessWidget {
@@ -10,7 +11,7 @@ class PanoramaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Virtual Tour',style: TextStyle(color: Colors.white),),
+        title: Text('Virtual Tour',style: GoogleFonts.roboto(color: Colors.white),),
         backgroundColor: const Color.fromARGB(255, 14, 86, 170),
         leading: IconButton(
           color: Colors.white,

@@ -125,9 +125,10 @@ class _OverviewPageState extends State<OverviewPage> {
             children: [
               Text(
                 widget.spot.name,
-                style: GoogleFonts.comfortaa(
-                  fontSize: 18,
+                style: GoogleFonts.roboto(
                   fontWeight: FontWeight.bold,
+                  fontSize: 22,
+
                 ),
               ),
               isLoading
@@ -144,7 +145,7 @@ class _OverviewPageState extends State<OverviewPage> {
           const SizedBox(height: 5),
           Text(
             '${widget.spot.likes} Likes',
-            style: GoogleFonts.comfortaa(fontSize: 14, color: Colors.black),
+            style: GoogleFonts.roboto(fontSize: 16, color: Colors.black),
           ),
           const Divider(),
           GestureDetector(
@@ -162,8 +163,8 @@ class _OverviewPageState extends State<OverviewPage> {
                 alignment: Alignment.center,
                 child: Text(
                   "Get Directions",
-                  style: GoogleFonts.comfortaa(
-                    fontSize: 15,
+                  style: GoogleFonts.roboto(
+                    fontSize: 18,
                     color: Colors.white,
                   ),
                 ),
@@ -171,30 +172,33 @@ class _OverviewPageState extends State<OverviewPage> {
             ),
           ),
           const Divider(),
+          const SizedBox(height: 10),
           Text(
             "BACKGROUND",
-            style: GoogleFonts.comfortaa(
-              fontSize: 14,
+            style: GoogleFonts.roboto(
+              fontSize: 18,
               fontWeight: FontWeight.w900,
             ),
           ),
+          SizedBox(height: 5,),
           Text(
             widget.spot.description,
-            style: GoogleFonts.comfortaa(fontSize: 12),
-            textAlign: TextAlign.justify,
+            style: GoogleFonts.roboto(fontSize: 14),
+
           ),
           const Divider(),
           Align(
             alignment: Alignment.bottomRight,
             child: Text(
               '₱${widget.spot.price}/Person',
-              style: GoogleFonts.comfortaa(
-                fontSize: 14,
+              style: GoogleFonts.roboto(
+                fontSize: 16,
                 color: const Color.fromARGB(255, 14, 86, 170),
               ),
             ),
           ),
           const Divider(),
+          const SizedBox(height: 5),
           Text(
             [
               "olo olo mangrove forest",
@@ -204,9 +208,9 @@ class _OverviewPageState extends State<OverviewPage> {
                 .contains(widget.spot.name.toLowerCase().trim())
                 ? "Virtual Tour"
                 : "Images",
-            style: GoogleFonts.comfortaa(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
+            style: GoogleFonts.roboto(
+              fontSize: 18,
+              fontWeight: FontWeight.bold
             ),
           ),
           const SizedBox(height: 10),
@@ -288,10 +292,10 @@ class _OverviewPageState extends State<OverviewPage> {
 
                                   ? "Tap here to view VR Tour"
                                   : "Tap here for more details",
-                              style: GoogleFonts.comfortaa(
-                                fontSize: 18,
+                              style: GoogleFonts.roboto(
+                                fontSize: 20,
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -313,63 +317,90 @@ class _OverviewPageState extends State<OverviewPage> {
 
 
 
+ Future<void> _openMap(BuildContext context, String address, String name) async {
+final availableMaps = await MapLauncher.installedMaps;
 
-Future<void> _openMap(BuildContext context, String location, String name) async {
-  final availableMaps = await MapLauncher.installedMaps;
-
-  if (availableMaps.isNotEmpty) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Wrap(
-          children: availableMaps.map((map) {
-            return ListTile(
-              leading: Icon(Icons.map),
-              title: Text(map.mapName),
-              onTap: () async {
-                Navigator.pop(context);
-                try {
-                  // Extract coordinates from the location string
-                  final regex = RegExp(r'@([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)');
-                  final match = regex.firstMatch(location);
-
-                  if (match != null) {
-                    final latitude = double.tryParse(match.group(1) ?? '');
-                    final longitude = double.tryParse(match.group(2) ?? '');
-
-                    if (latitude != null && longitude != null) {
-                      await map.showDirections(
-                        destination: Coords(latitude, longitude),
-                        destinationTitle: name,
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Invalid coordinates.')),
-                      );
-                    }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Coordinates not found.')),
-                    );
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
-              },
-            );
-          }).toList(),
-        );
-      },
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No available map applications.')),
-    );
-  }
+if (availableMaps.isNotEmpty) {
+showModalBottomSheet(
+context: context,
+builder: (context) {
+return Wrap(
+children: [
+Padding(
+padding: const EdgeInsets.all(16.0),
+child: Text(
+'Choose a map',
+style: GoogleFonts.roboto(
+fontSize: 18,
+fontWeight: FontWeight.bold,
+),
+),
+),
+...availableMaps.map((map) {
+// Assign the custom icons based on the map name
+String iconPath;
+if (map.mapName.toLowerCase().contains('google')) {
+iconPath = 'assets/images/maps_icon/google maps.png';
+} else if (map.mapName.toLowerCase().contains('waze')) {
+iconPath = 'assets/images/maps_icon/waze.png';
+} else {
+iconPath = ''; // Fallback for unknown map apps
 }
 
+return ListTile(
+leading: iconPath.isNotEmpty
+? Image.asset(
+iconPath,
+width: 32, // Set the desired width
+height: 32, // Set the desired height
+fit: BoxFit.cover,
+)
+    : const Icon(Icons.map), // Default icon for unsupported apps
+title: Text(map.mapName),
+onTap: () async {
+Navigator.pop(context); // Close modal
+try {
+// Extract coordinates from the location string
+final regex = RegExp(r'@([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)');
+final match = regex.firstMatch(address);
+
+if (match != null) {
+final latitude = double.tryParse(match.group(1) ?? '');
+final longitude = double.tryParse(match.group(2) ?? '');
+
+if (latitude != null && longitude != null) {
+await map.showDirections(
+destination: Coords(latitude, longitude),
+destinationTitle: name,
+);
+} else {
+ScaffoldMessenger.of(context).showSnackBar(
+const SnackBar(content: Text('Invalid coordinates.')),
+);
+}
+} else {
+ScaffoldMessenger.of(context).showSnackBar(
+const SnackBar(content: Text('Coordinates not found.')),
+);
+}
+} catch (e) {
+ScaffoldMessenger.of(context).showSnackBar(
+SnackBar(content: Text('Error: $e')),
+);
+}
+},
+);
+}).toList(),
+],
+);
+},
+);
+} else {
+ScaffoldMessenger.of(context).showSnackBar(
+const SnackBar(content: Text('No available map applications.')),
+);
+}
+}
 
 
 
@@ -422,7 +453,7 @@ void _showImagePopup(BuildContext context, String imageUrl) {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text("Close"),
+              child: const Text("Close",style: TextStyle(color: Color.fromARGB(255, 14, 86, 170),fontSize: 14),),
             ),
           ],
         ),

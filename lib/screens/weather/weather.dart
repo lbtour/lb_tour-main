@@ -112,8 +112,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
     children: [
     Text(
     selectedForecast["name"],
-    style: GoogleFonts.comfortaa(
-    fontSize: 28,
+    style: GoogleFonts.roboto(
+    fontSize: 32,
     fontWeight: FontWeight.bold,
     color: Colors.black,
     ),
@@ -121,17 +121,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
     const SizedBox(height: 8),
     Text(
     '${selectedForecast["temp"]}°C',
-    style: GoogleFonts.comfortaa(
-    fontSize: 64,
+    style: GoogleFonts.roboto(
+    fontSize: 72,
     fontWeight: FontWeight.bold,
-    color: Colors.black,
+    color: Color.fromARGB(255, 14, 86, 170),
     ),
     ),
     const SizedBox(height: 4),
     Text(
     selectedForecast["condition"],
-    style: GoogleFonts.comfortaa(
-    fontSize: 24,
+    style: GoogleFonts.roboto(
+    fontSize: 28,
     fontWeight: FontWeight.normal,
     color: Colors.black,
     ),
@@ -139,9 +139,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
     const SizedBox(height: 8),
     Text(
     displayDateTime,
-    style: GoogleFonts.comfortaa(
-    fontSize: 18,
-    color: Colors.black54,
+    style: GoogleFonts.roboto(
+    fontSize: 22,
+    color: Color.fromARGB(255, 14, 86, 170),
     ),
     ),
     ],
@@ -155,8 +155,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
     alignment: Alignment.centerLeft,
     child: Text(
     "Hourly Forecast",
-    style: GoogleFonts.comfortaa(
-    fontSize: 18,
+    style: GoogleFonts.roboto(
+    fontSize: 22,
     fontWeight: FontWeight.bold,
     color: Colors.black,
     ),
@@ -200,7 +200,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     borderRadius: BorderRadius.circular(10),
     border: Border.all(
     color: isSelected
-    ? Colors.lightBlueAccent
+    ? Color.fromARGB(255, 14, 86, 170)
         : Colors.grey.shade300,
     ),
     ),
@@ -210,23 +210,26 @@ class _WeatherScreenState extends State<WeatherScreen> {
     Text(
     DateFormat('h a')
         .format(forecast['time']),
-    style: GoogleFonts.comfortaa(
+    style: GoogleFonts.roboto(
     color: Colors.black,
-    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    fontSize: 18,
     ),
     ),
     const SizedBox(height: 4),
     Text(
     '${forecast['temp']}°C',
     style: GoogleFonts.comfortaa(
-    color: Colors.black,
+
+    color: Color.fromARGB(255, 14, 86, 170),
+
     fontSize: 16,
     ),
     ),
     const SizedBox(height: 4),
     Text(
     "${forecast['rain']}% Rain",
-    style: GoogleFonts.comfortaa(
+    style: GoogleFonts.roboto(
     color: Colors.black54,
     fontSize: 14,
     ),
@@ -250,8 +253,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
     alignment: Alignment.centerLeft,
     child: Text(
     "Daily Forecast",
-    style: GoogleFonts.comfortaa(
-    fontSize: 18,
+    style: GoogleFonts.roboto(
+    fontSize: 22,
     fontWeight: FontWeight.bold,
     color: Colors.black,
     ),
@@ -259,7 +262,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     ),
     const SizedBox(height: 12),
     SizedBox(
-    height: 200,
+    height: 250,
     child: ListView.builder(
     itemCount: dailyForecast.length,
     itemBuilder: (context, index) {
@@ -307,23 +310,24 @@ class _WeatherScreenState extends State<WeatherScreen> {
     Text(
     DateFormat('EEEE')
         .format(dayForecast['date']),
-    style: GoogleFonts.comfortaa(
+    style: GoogleFonts.roboto(
     color: Colors.black,
-    fontSize: 16,
+    fontSize: 18,
     ),
     ),
     Text(
     '${dayForecast['rainPercentage']}% Rain',
-    style: GoogleFonts.comfortaa(
+    style: GoogleFonts.roboto(
     color: Colors.black,
-    fontSize: 16,
+    fontSize: 18,
     ),
     ),
     Text(
     '${dayForecast['averageTemp']}°C',
-    style: GoogleFonts.comfortaa(
-    color: Colors.black,
-    fontSize: 16,
+    style: GoogleFonts.roboto(
+
+    color: Color.fromARGB(255, 14, 86, 170),
+    fontSize: 18,
     ),
     ),
     ],

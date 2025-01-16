@@ -157,7 +157,7 @@ class TabNavigation extends StatelessWidget {
                     canvasColor: const Color.fromARGB(255, 255, 255, 255),
                     primaryColor: Colors.white,
                     textTheme: Theme.of(context).textTheme.copyWith(
-                      bodySmall: GoogleFonts.comfortaa(color: Colors.black),
+                      bodySmall: GoogleFonts.roboto(color: Colors.black),
                     ),
                   ),
                   child: TabBar(
@@ -170,7 +170,7 @@ class TabNavigation extends StatelessWidget {
                           width: 2.0, color: Color.fromARGB(255, 14, 86, 170)),
                       insets: EdgeInsets.symmetric(horizontal: 5),
                     ),
-                    labelStyle: GoogleFonts.comfortaa(fontWeight: FontWeight.bold),
+                    labelStyle: GoogleFonts.roboto(),
                     labelPadding: const EdgeInsets.symmetric(horizontal: 10),
                     tabs: const [
                       Tab(
@@ -180,7 +180,7 @@ class TabNavigation extends StatelessWidget {
                         ),
                         child: Text(
                           "Home",
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 16),
                         ),
                       ),
                       Tab(
@@ -190,7 +190,7 @@ class TabNavigation extends StatelessWidget {
                         ),
                         child: Text(
                           "Discover",
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 16),
                         ),
                       ),
                       Tab(
@@ -200,7 +200,7 @@ class TabNavigation extends StatelessWidget {
                         ),
                         child: Text(
                           "Weather",
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 16),
                         ),
                       ),
                       Tab(
@@ -210,7 +210,7 @@ class TabNavigation extends StatelessWidget {
                         ),
                         child: Text(
                           "Top-Rated",
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 16),
                         ),
                       ),
                       Tab(
@@ -220,7 +220,7 @@ class TabNavigation extends StatelessWidget {
                         ),
                         child: Text(
                           "Account",
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 16),
                         ),
                       ),
                     ],

@@ -101,7 +101,7 @@ class _LandingPage_ScreenState extends State<LandingPage_Screen> {
                     ),
                     child: Text(
                       'Explore Now',
-                      style: GoogleFonts.comfortaa(fontWeight: FontWeight.bold, fontSize: 18),
+                      style: GoogleFonts.roboto(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
                   ),
                   const SizedBox(height: 50),

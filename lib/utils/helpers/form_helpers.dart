@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 Widget buildTextField({
   required TextEditingController controller,
@@ -8,6 +9,7 @@ Widget buildTextField({
   Widget? prefixIcon,
 }) {
   return TextFormField(
+    style: GoogleFonts.roboto(fontSize: 16),
     controller: controller,
     keyboardType: keyboardType,
     decoration: InputDecoration(

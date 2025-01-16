@@ -1,6 +1,20 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:lb_tour/screens/getstarted/getstarted.dart';
+
+
+import '../navigation-tab.dart';
+import '../screens/authentication/login.dart';
+import '../utils/local_storage/local_storage.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,7 +31,7 @@ class AuthenticationRepository extends GetxController {
 
   final deviceStorage = GetStorage();
   final _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
 
   // Get Authenticated User Data
   User? get authUser => _auth.currentUser;
@@ -92,7 +106,8 @@ class AuthenticationRepository extends GetxController {
         password: password.trim(),
       );
 
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      // Save user data in Realtime Database
+      await _databaseRef.child('users').child(userCredential.user!.uid).set({
         "firstName": firstName.trim(),
         "lastName": lastName.trim(),
         "email": email.trim(),
@@ -107,6 +122,7 @@ class AuthenticationRepository extends GetxController {
           ),
         );
       }
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -127,4 +143,6 @@ class AuthenticationRepository extends GetxController {
       throw 'Something went wrong. Please try again';
     }
   }
+
+
 }

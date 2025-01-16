@@ -55,15 +55,17 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         Text(
           "Welcome to LB Tour",
-          style: GoogleFonts.comfortaa(
-            fontSize: width * 0.068,
+          style: GoogleFonts.roboto(
+            fontSize: width * 0.080,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
         ),
+        SizedBox(height: 5,),
         Text(
           "Please fill up the necessary credentials.",
-          style: GoogleFonts.comfortaa(
+          style: GoogleFonts.roboto(
+            fontSize: width * 0.035,
             color: Colors.black54,
           ),
         ),
@@ -80,7 +82,10 @@ class _LoginScreenState extends State<LoginScreen> {
           controller: _emailController,
           cursorColor: Colors.black54,
           decoration: InputDecoration(
-            hintStyle: GoogleFonts.comfortaa(color: Colors.black54),
+            hintStyle: GoogleFonts.roboto(
+
+                fontSize: width * 0.040,
+                color: Colors.black54),
             hintText: "Email Address",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
@@ -101,7 +106,9 @@ class _LoginScreenState extends State<LoginScreen> {
           cursorColor: Colors.black54,
           obscureText: !_isPasswordVisible,
           decoration: InputDecoration(
-            hintStyle: GoogleFonts.comfortaa(color: Colors.black54),
+            hintStyle: GoogleFonts.roboto(
+                fontSize: width * 0.040,
+                color: Colors.black54),
             hintText: "Password",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
@@ -142,12 +149,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ? const CircularProgressIndicator(color: Colors.white)
               : Text(
             "Login",
-            style: GoogleFonts.comfortaa(
+            style: GoogleFonts.roboto(
+              fontSize: width * 0.045,
               color: Colors.white,
             ),
           ),
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -181,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
       },
       child: Text(
         "Forgot Password?",
-        style: GoogleFonts.comfortaa(
+        style: GoogleFonts.roboto(
           fontSize: width * 0.032,
           color: Colors.black54,
         ),
@@ -195,7 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Text(
           "Don't have an account?",
-          style: GoogleFonts.comfortaa(
+          style: GoogleFonts.roboto(
             fontSize: width * 0.032,
             color: Colors.black,
           ),
@@ -209,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
           },
           child: Text(
             "Sign up here!",
-            style: GoogleFonts.comfortaa(
+            style: GoogleFonts.roboto(
               fontSize: width * 0.032,
               color: Colors.black54,
             ),
