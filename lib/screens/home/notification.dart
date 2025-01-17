@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
@@ -99,11 +101,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
         backgroundColor: Colors.transparent,
         leading: GestureDetector(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TabNavigation(initialIndex: 0),
-              ),
+            Get.to(
+                () => TabNavigation(initialIndex: 0),
+
             );
           },
           child: const HugeIcon(

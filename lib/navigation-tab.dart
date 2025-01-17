@@ -27,6 +27,7 @@ class _TabNavigationState extends State<TabNavigation>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedIndex = 0;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
   @override
@@ -36,7 +37,6 @@ class _TabNavigationState extends State<TabNavigation>
     _tabController = TabController(length: 5, vsync: this, initialIndex: _selectedIndex);
     Get.put(BookingController());
 
-    // Listen for changes and update _selectedIndex
     _tabController.addListener(() {
       if (_tabController.index != _selectedIndex) {
         setState(() {
@@ -59,6 +59,7 @@ class _TabNavigationState extends State<TabNavigation>
       }
     }
   }
+
   Future<bool> _showExitConfirmationDialog() async {
     return await showDialog(
       context: context,
@@ -66,113 +67,103 @@ class _TabNavigationState extends State<TabNavigation>
         return Padding(
           padding: const EdgeInsets.all(20.0),
           child: Dialog(
-            insetPadding: EdgeInsets.zero, // Remove padding
+            insetPadding: EdgeInsets.zero,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             child: SingleChildScrollView(
-              child: Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(60)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Title
-                    Container(
-                      height: 60,
-                      width: double.infinity,
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
-                        color: Color.fromARGB(255, 14, 86, 170),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 60,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      color: Color.fromARGB(255, 14, 86, 170),
+                    ),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Exit App",
+                        style: GoogleFonts.roboto(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          "Exit App",
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      "Are you sure you want to exit?",
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        icon: const Icon(Icons.exit_to_app, color: Colors.white),
+                        label: Text(
+                          "Exit",
                           style: GoogleFonts.roboto(
-                            fontSize: 20,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
 
-                    // Message
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        "Are you sure you want to exit?",
-                        style: GoogleFonts.roboto(
-                          fontSize: 16,
-                          color: Colors.black87,
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 14, 86, 170),
+                          ),
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                    ],
+                  ),
 
-                    // Actions
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // Exit Button
-                        ElevatedButton.icon(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          icon: const Icon(Icons.exit_to_app, color: Colors.white),
-                          label: Text(
-                            "Exit",
-                            style: GoogleFonts.roboto(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade600,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-
-                        // Cancel Button
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 14, 86, 170),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
           ),
         );
       },
-    ) ?? false;
+    ) ??
+        false;
   }
-
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false, // Prevent default back navigation
+      canPop: false,
       onPopInvoked: (didPop) async {
         if (_selectedIndex != 0) {
           setState(() {
-            _selectedIndex = 0; // Reset to Home tab
-            _tabController.animateTo(0); // Update TabController
+            _selectedIndex = 0;
+            _tabController.animateTo(0);
           });
         } else {
           bool shouldExit = await _showExitConfirmationDialog();
@@ -204,13 +195,67 @@ class _TabNavigationState extends State<TabNavigation>
                         const SizedBox(width: 10),
                         Text(
                           'Lobo, Batangas',
-                          style: GoogleFonts.roboto(fontSize: 14, color: const Color.fromARGB(255, 0, 0, 0)),
+                          style: GoogleFonts.roboto(fontSize: 14, color: Colors.black),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
+              actions: [
+                StreamBuilder<DatabaseEvent>(
+                  stream: _database.child('Booking').child(_auth.currentUser?.uid ?? '').onValue,
+                  builder: (context, snapshot) {
+                    bool hasNotification = false;
+
+                    if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+                      Map<dynamic, dynamic> bookings =
+                      Map<dynamic, dynamic>.from(snapshot.data!.snapshot.value as Map);
+                      for (var bookingId in bookings.keys) {
+                        if (bookings[bookingId]['isActive'] == true) {
+                          hasNotification = true;
+                          break;
+                        }
+                      }
+                    }
+
+                    return GestureDetector(
+                      onTap: () async {
+                        if (_auth.currentUser != null) {
+                          await markAllBookingsAsRead(_auth.currentUser!.uid);
+                        }
+                       Get.to(
+                            () => const NotificationScreen(),
+
+                        );
+                      },
+                      child: Stack(
+                        children: [
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedNotification01,
+                            color: Colors.black,
+                            size: 24.0,
+                          ),
+                          if (hasNotification)
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                width: 8.0,
+                                height: 8.0,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 14),
+              ],
             ),
             body: TabBarView(
               controller: _tabController,
