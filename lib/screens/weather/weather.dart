@@ -30,22 +30,15 @@ class _WeatherScreenState extends State<WeatherScreen> {
           'https://api.openweathermap.org/data/2.5/forecast?q=$cityName&APPID=$openWeatherAPIKey',
         ),
       );
+      if (res.statusCode != 200) throw "Failed to load weather data";
+
       final data = jsonDecode(res.body);
-
-      // After data is loaded, stop loading indicator
-      setState(() {
-        isLoading = false;
-      });
-
       return data;
     } catch (e) {
-      setState(() {
-        isLoading = false; // Ensure loading stops even if there's an error
-      });
-      throw e.toString();
+      print("❌ Error fetching weather data: $e");
+      return {}; // Return an empty map instead of null
     }
   }
-
   @override
   void initState() {
     super.initState();
@@ -61,291 +54,291 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: FutureBuilder(
+      body: FutureBuilder(
         future: getCurrentWeather(),
-    builder: (context, snapshot) {
-    if (isLoading && !snapshot.hasData) {
-    // Show CircularProgressIndicator only during the initial load
-    return const Center(
-    child: CircularProgressIndicator(
-    color: Color.fromARGB(255, 14, 86, 170),
-    ),
-    );
-    }
+        builder: (context, snapshot) {
+          if (isLoading && !snapshot.hasData) {
+            // Show CircularProgressIndicator only during the initial load
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 14, 86, 170),
+              ),
+            );
+          }
 
-    if (snapshot.hasError) {
-    return Center(child: Text(snapshot.error.toString()));
-    }
+          if (snapshot.hasError) {
+            return Center(child: Text(snapshot.error.toString()));
+          }
 
-    final data = snapshot.data!;
-    final currentWeatherData = data['list'][0];
-    final currentTemp =
-    (currentWeatherData['main']['temp'] - 273.15).toStringAsFixed(1);
-    final currentSky = currentWeatherData['weather'][0]['main'];
+          final data = snapshot.data!;
+          final currentWeatherData = data['list'][0];
+          final currentTemp =
+          (currentWeatherData['main']['temp'] - 273.15).toStringAsFixed(1);
+          final currentSky = currentWeatherData['weather'][0]['main'];
 
-    // Update "Today" forecast
-    if (selectedForecast["temp"] == "Loading...") {
-    selectedForecast = {
-    "name": "Today",
-    "temp": currentTemp,
-    "condition": currentSky,
-    };
-    }
+          // Update "Today" forecast
+          if (selectedForecast["temp"] == "Loading...") {
+            selectedForecast = {
+              "name": "Today",
+              "temp": currentTemp,
+              "condition": currentSky,
+            };
+          }
 
-    // Grouping data for daily and hourly forecasts
-    final dailyForecast = _groupDailyForecast(data['list']);
-    final interpolatedHourlyForecast =
-    _interpolateHourlyForecast(data['list']);
+          // Grouping data for daily and hourly forecasts
+          final dailyForecast = _groupDailyForecast(data['list']);
+          final interpolatedHourlyForecast =
+          _interpolateHourlyForecast(data['list']);
 
-    return Container(
-    decoration: const BoxDecoration(
-    color: Colors.white,
-    ),
-    child: SafeArea(
-    child: Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-    // Dynamic Header Section (Updates on selection)
-    Column(
-    children: [
-    Text(
-    selectedForecast["name"],
-    style: GoogleFonts.roboto(
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
-    color: Colors.black,
-    ),
-    ),
-    const SizedBox(height: 8),
-    Text(
-    '${selectedForecast["temp"]}°C',
-    style: GoogleFonts.roboto(
-    fontSize: 72,
-    fontWeight: FontWeight.bold,
-    color: Color.fromARGB(255, 14, 86, 170),
-    ),
-    ),
-    const SizedBox(height: 4),
-    Text(
-    selectedForecast["condition"],
-    style: GoogleFonts.roboto(
-    fontSize: 28,
-    fontWeight: FontWeight.normal,
-    color: Colors.black,
-    ),
-    ),
-    const SizedBox(height: 8),
-    Text(
-    displayDateTime,
-    style: GoogleFonts.roboto(
-    fontSize: 22,
-    color: Color.fromARGB(255, 14, 86, 170),
-    ),
-    ),
-    ],
-    ),
-    const SizedBox(height: 20),
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Dynamic Header Section (Updates on selection)
+                    Column(
+                      children: [
+                        Text(
+                          selectedForecast["name"],
+                          style: GoogleFonts.roboto(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${selectedForecast["temp"]}°C',
+                          style: GoogleFonts.roboto(
+                            fontSize: 72,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 14, 86, 170),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          selectedForecast["condition"],
+                          style: GoogleFonts.roboto(
+                            fontSize: 28,
+                            fontWeight: FontWeight.normal,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          displayDateTime,
+                          style: GoogleFonts.roboto(
+                            fontSize: 22,
+                            color: Color.fromARGB(255, 14, 86, 170),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
 
-    // Hourly Forecast Section
-    Column(
-    children: [
-    Align(
-    alignment: Alignment.centerLeft,
-    child: Text(
-    "Hourly Forecast",
-    style: GoogleFonts.roboto(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-    color: Colors.black,
-    ),
-    ),
-    ),
-    const SizedBox(height: 12),
-    SizedBox(
-    height: 120,
-    child: ListView.builder(
-    scrollDirection: Axis.horizontal,
-    itemCount: interpolatedHourlyForecast.length,
-    itemBuilder: (context, index) {
-    final forecast = interpolatedHourlyForecast[index];
-    final isSelected = index == selectedHourlyIndex;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedType = "hourly";
-          selectedHourlyIndex = index; // Highlight the selected hour
-          selectedRowIndex = null; // Clear daily selection
-          selectedForecast = {
-            "name": "Hourly Forecast",
-            "temp": forecast['temp'],
-            "condition": "${forecast['rain']}% Rain",
-          };
-          displayDateTime = DateFormat(
-              'MMM dd, yyyy - h a')
-              .format(forecast['time']);
-        });
-      },
+                    // Hourly Forecast Section
+                    Column(
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "Hourly Forecast",
+                            style: GoogleFonts.roboto(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 120,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: interpolatedHourlyForecast.length,
+                            itemBuilder: (context, index) {
+                              final forecast = interpolatedHourlyForecast[index];
+                              final isSelected = index == selectedHourlyIndex;
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    selectedType = "hourly";
+                                    selectedHourlyIndex = index; // Highlight the selected hour
+                                    selectedRowIndex = null; // Clear daily selection
+                                    selectedForecast = {
+                                      "name": "Hourly Forecast",
+                                      "temp": forecast['temp'],
+                                      "condition": "${forecast['rain']}% Rain",
+                                    };
+                                    displayDateTime = DateFormat(
+                                        'MMM dd, yyyy - h a')
+                                        .format(forecast['time']);
+                                  });
+                                },
 
-      child: Container(
-    margin:
-    const EdgeInsets.symmetric(horizontal: 8),
-    padding: const EdgeInsets.all(8),
-    decoration: BoxDecoration(
-    color: isSelected
-    ? Colors.lightBlueAccent
-        .withOpacity(0.3)
-        : Colors.transparent,
-    borderRadius: BorderRadius.circular(10),
-    border: Border.all(
-    color: isSelected
-    ? Color.fromARGB(255, 14, 86, 170)
-        : Colors.grey.shade300,
-    ),
-    ),
-    child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-    Text(
-    DateFormat('h a')
-        .format(forecast['time']),
-    style: GoogleFonts.roboto(
-    color: Colors.black,
-    fontWeight: FontWeight.bold,
-    fontSize: 18,
-    ),
-    ),
-    const SizedBox(height: 4),
-    Text(
-    '${forecast['temp']}°C',
-    style: GoogleFonts.comfortaa(
+                                child: Container(
+                                  margin:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? Colors.lightBlueAccent
+                                        .withOpacity(0.3)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Color.fromARGB(255, 14, 86, 170)
+                                          : Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        DateFormat('h a')
+                                            .format(forecast['time']),
+                                        style: GoogleFonts.roboto(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${forecast['temp']}°C',
+                                        style: GoogleFonts.comfortaa(
 
-    color: Color.fromARGB(255, 14, 86, 170),
+                                          color: Color.fromARGB(255, 14, 86, 170),
 
-    fontSize: 16,
-    ),
-    ),
-    const SizedBox(height: 4),
-    Text(
-    "${forecast['rain']}% Rain",
-    style: GoogleFonts.roboto(
-    color: Colors.black54,
-    fontSize: 14,
-    ),
-    ),
-    ],
-    ),
-    ),
-    );
-    },
-    ),
-    ),
-    ],
-    ),
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "${forecast['rain']}% Rain",
+                                        style: GoogleFonts.roboto(
+                                          color: Colors.black54,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
 
-    const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-    // Daily Forecast Section
-    Column(
-    children: [
-    Align(
-    alignment: Alignment.centerLeft,
-    child: Text(
-    "Daily Forecast",
-    style: GoogleFonts.roboto(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-    color: Colors.black,
-    ),
-    ),
-    ),
-    const SizedBox(height: 12),
-    SizedBox(
-    height: 250,
-    child: ListView.builder(
-    itemCount: dailyForecast.length,
-    itemBuilder: (context, index) {
-    final dayForecast = dailyForecast[index];
-    final isSelected = index == selectedRowIndex;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedType = "daily";
-          selectedRowIndex = index; // Highlight the selected row
-          selectedHourlyIndex = null; // Clear hourly selection
-          selectedForecast = {
-            "name": DateFormat('EEEE')
-                .format(dayForecast['date']),
-            "temp": dayForecast['averageTemp'],
-            "condition":
-            "Rain: ${dayForecast['rainPercentage']}%",
-          };
-          displayDateTime = DateFormat(
-              'MMM dd, yyyy')
-              .format(dayForecast['date']);
-        });
-      },
+                    // Daily Forecast Section
+                    Column(
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "Daily Forecast",
+                            style: GoogleFonts.roboto(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 250,
+                          child: ListView.builder(
+                            itemCount: dailyForecast.length,
+                            itemBuilder: (context, index) {
+                              final dayForecast = dailyForecast[index];
+                              final isSelected = index == selectedRowIndex;
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    selectedType = "daily";
+                                    selectedRowIndex = index; // Highlight the selected row
+                                    selectedHourlyIndex = null; // Clear hourly selection
+                                    selectedForecast = {
+                                      "name": DateFormat('EEEE')
+                                          .format(dayForecast['date']),
+                                      "temp": dayForecast['averageTemp'],
+                                      "condition":
+                                      "Rain: ${dayForecast['rainPercentage']}%",
+                                    };
+                                    displayDateTime = DateFormat(
+                                        'MMM dd, yyyy')
+                                        .format(dayForecast['date']);
+                                  });
+                                },
 
-      child: Container(
-    margin:
-    const EdgeInsets.symmetric(vertical: 4),
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-    color: isSelected
-    ? Colors.lightBlueAccent
-        .withOpacity(0.3)
-        : Colors.transparent,
-    borderRadius: BorderRadius.circular(10),
-    border: Border.all(
-    color: isSelected
-    ? Colors.lightBlueAccent
-        : Colors.grey.shade300,
-    ),
-    ),
-    child: Row(
-    mainAxisAlignment:
-    MainAxisAlignment.spaceBetween,
-    children: [
-    Text(
-    DateFormat('EEEE')
-        .format(dayForecast['date']),
-    style: GoogleFonts.roboto(
-    color: Colors.black,
-    fontSize: 18,
-    ),
-    ),
-    Text(
-    '${dayForecast['rainPercentage']}% Rain',
-    style: GoogleFonts.roboto(
-    color: Colors.black,
-    fontSize: 18,
-    ),
-    ),
-    Text(
-    '${dayForecast['averageTemp']}°C',
-    style: GoogleFonts.roboto(
+                                child: Container(
+                                  margin:
+                                  const EdgeInsets.symmetric(vertical: 4),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? Colors.lightBlueAccent
+                                        .withOpacity(0.3)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? Colors.lightBlueAccent
+                                          : Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        DateFormat('EEEE')
+                                            .format(dayForecast['date']),
+                                        style: GoogleFonts.roboto(
+                                          color: Colors.black,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${dayForecast['rainPercentage']}% Rain',
+                                        style: GoogleFonts.roboto(
+                                          color: Colors.black,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${dayForecast['averageTemp']}°C',
+                                        style: GoogleFonts.roboto(
 
-    color: Color.fromARGB(255, 14, 86, 170),
-    fontSize: 18,
-    ),
-    ),
-    ],
-    ),
-    ),
-    );
-    },
-    ),
-    ),
-    ],
-    ),
-    ],
-    ),
-    ),
-    ),
-    );
-    },
-        ),
+                                          color: Color.fromARGB(255, 14, 86, 170),
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 150,
         ),
         Text(
-          "Welcome to LB Tour",
+          "Welcome to Explore Lobo",
           style: GoogleFonts.roboto(
             fontSize: width * 0.080,
             fontWeight: FontWeight.bold,

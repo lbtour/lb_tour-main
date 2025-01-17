@@ -1,6 +1,8 @@
 import 'dart:async'; // For Timer
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/tourist_spot/tourist_spot_model.dart';
@@ -107,11 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
           final spot = touristSpots[index];
           return GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BookingScreen(spot: spot),
-                ),
+             Get.to(() =>
+                BookingScreen(spot: spot),
               );
             },
             child: Column(
