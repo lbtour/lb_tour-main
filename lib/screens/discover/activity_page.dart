@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
+import '../../ccontroller/activity_controller.dart';
 import '../../ccontroller/booking_controller.dart';
 import '../../models/tourist_spot/tourist_spot_model.dart';
 
@@ -22,7 +23,11 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
     super.initState();
     _selectedActivityIndex = 0; // Initially select the first activity
     if (widget.spot.activities.isNotEmpty) {
-      bookingController.updateSelectedActivityImage(widget.spot.activities[0].image);
+      final ActivityController activityController = Get.find<ActivityController>();
+
+      if (widget.spot.activities.isNotEmpty) {
+        activityController.updateSelectedActivity(0, widget.spot.activities[0].image);
+      }
     }
   }
 
@@ -59,7 +64,8 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
               onTap: () {
                 setState(() {
                   _selectedActivityIndex = index; // Update selected index
-                  bookingController.updateSelectedActivityImage(activity.image); // Notify controller
+                  final ActivityController activityController = Get.find<ActivityController>();
+                  activityController.updateSelectedActivity(index, activity.image);
                 });
               },
               child: Card(

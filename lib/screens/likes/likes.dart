@@ -93,40 +93,34 @@ class TopRatedScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                spot.name.length > 50 ? '${spot.name.substring(0, 50)}...' : spot.name,
-                                style: GoogleFonts.roboto(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                overflow: TextOverflow.ellipsis, // Ensures text gets truncated
-                                maxLines: 1, // Limits to a single line
-                              ),
-                            ),
-                            SizedBox(width: 5,),
-                            Text(
-                              '₱${spot.price}/Person',
-                              style: GoogleFonts.roboto(
-                                fontSize: 18,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          spot.name.length > 50 ? '${spot.name.substring(0, 50)}...' : spot.name,
+                          style: GoogleFonts.roboto(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis, // Ensures text gets truncated
+                          maxLines: 1, // Limits to a single line
+                        ),
+                        SizedBox(height: 5,),
+                        Text(
+                          '₱${spot.price}/Person',
+                          style: GoogleFonts.roboto(
+                            fontSize: 14,
+                            color: Colors.green,
+                          ),
                         ),
 
                         const SizedBox(height: 5),
                         Text(
                           '${spot.likes} Likes',
-                          style: GoogleFonts.roboto(fontSize: 16),
+                          style: GoogleFonts.roboto(fontSize: 14),
                         ),
                         const SizedBox(height: 5),Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Container(
+                        height: 40,
                         decoration: BoxDecoration(
                           color: Colors.transparent,
                           borderRadius: BorderRadius.all(Radius.circular(30)),
@@ -140,7 +134,7 @@ class TopRatedScreen extends StatelessWidget {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30), // Match container's radius
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0), // Consistent padding
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0), // Consistent padding
                           ),
                           onPressed: () {
                             final selectedSpot = controller.selectedSpot.value;
@@ -167,7 +161,7 @@ class TopRatedScreen extends StatelessWidget {
                                 : "Check Tourist Spot",
                             style: GoogleFonts.roboto(
                               textStyle: TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 color: Color.fromARGB(255, 14, 86, 170), // Text color matches border
                               ),
                             ),
@@ -185,6 +179,7 @@ class TopRatedScreen extends StatelessWidget {
                             controller.feedbacks[spot.id]?.any((feedback) => feedback.fullName == controller.fullName.value) == true;
 
                         return Container(
+                          height: 40,
                           decoration: BoxDecoration(
                             color: Colors.transparent,
                             borderRadius: BorderRadius.all(Radius.circular(30)),
@@ -198,7 +193,7 @@ class TopRatedScreen extends StatelessWidget {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
                             ),
                             onPressed: () async {
                               String? existingFeedback;
@@ -220,7 +215,7 @@ class TopRatedScreen extends StatelessWidget {
                             child: Text(
                               hasFeedback ? "Edit Feedback" : "Add Feedback",
                               style: GoogleFonts.roboto(
-                                textStyle: TextStyle(fontSize: 16, color: Color.fromARGB(255, 14, 86, 170)),
+                                textStyle: TextStyle(fontSize: 14, color: Color.fromARGB(255, 14, 86, 170)),
                               ),
                             ),
                           ),
@@ -231,13 +226,37 @@ class TopRatedScreen extends StatelessWidget {
                   ),
 
 
-                      const SizedBox(height: 5),
 
 
 
+SizedBox(height: 15,),
+                        GestureDetector(
+                          onTap: () {
+                            showFeedbackModal(context); // ✅ Opens the modal on tap
+                          },
+                          child: Center(
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
 
+                                borderRadius: BorderRadius.all(Radius.circular(20)),
+                                color: Colors.white,
+                                border: Border.all(color: Color.fromARGB(255, 14, 86, 170)),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Center(
+                                  child: Text(
+                                    'View Feedback',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color.fromARGB(255, 14, 86, 170)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
 
-FeedbackWidget(),
+                        SizedBox(height: 5,),
 
 
                       ],
@@ -249,79 +268,197 @@ FeedbackWidget(),
           }),
           Expanded(
             child: Obx(() {
-              return ListView.builder(
-                itemCount: controller.touristSpots.length,
-                itemBuilder: (context, index) {
-                  final spot = controller.touristSpots[index];
-                  return GestureDetector(
-                    onTap: () {
-                      controller.selectSpot(spot);
-                    },
-                    child: Card(
-                      color: Colors.white,
-                      elevation: 4,
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: Column(
-                        children: [
-                          Stack(
-                            children: [
-                              Image.network(
-                                spot.imageUrl,
-                                fit: BoxFit.cover,
-                                height: 200,
-                                width: double.infinity,
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  color: Colors.black.withOpacity(0.5),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        spot.name,
-                                        style: GoogleFonts.roboto(
-                                          color: Colors.white,
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
+              final screenWidth = MediaQuery.of(context).size.width;
+              final screenHeight = MediaQuery.of(context).size.height;
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      height: screenHeight * 0.6, // ✅ Adjusted height dynamically
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10.0),
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          scrollDirection: Axis.horizontal,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2, // ✅ Two items per row
+                            crossAxisSpacing: 5,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.45, // ✅ Keeps layout proportions
+                          ),
+                          itemCount: controller.touristSpots.length,
+                          itemBuilder: (context, index) {
+                            final spot = controller.touristSpots[index];
+                            return GestureDetector(
+                              onTap: () {
+                                controller.selectSpot(spot);
+                              },
+                              child: Card(
+                                color: Colors.white,
+                                elevation: 4,
+                                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                child: Column(
+                                  children: [
+                                    Stack(
+                                      children: [
+                                        Image.network(
+                                          spot.imageUrl,
+                                          fit: BoxFit.cover,
+                                          height: 150,
+                                          width: double.infinity,
                                         ),
-                                      ),
-                                      Text(
-                                        '₱${spot.price}/Person',
-                                        style: GoogleFonts.roboto(
-                                          color: Colors.white,
-                                          fontSize: 16,
+                                        Positioned(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(10),
+                                            color: Colors.black.withOpacity(0.5),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  spot.name,
+                                                  style: GoogleFonts.roboto(
+                                                    color: Colors.white,
+                                                    fontSize: screenWidth * 0.04, // ✅ Dynamic font size
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '₱${spot.price}/Person',
+                                                  style: GoogleFonts.roboto(
+                                                    color: Colors.white,
+                                                    fontSize: screenWidth * 0.03, // ✅ Dynamic font size
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
+                                      ],
+                                    ),
+                                    // ✅ CONSTRAIN FEEDBACK VIEW TO PREVENT OVERFLOW
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxHeight: screenHeight * 0.15, // ✅ Limits feedback expansion
                                       ),
-                                    ],
-                                  ),
+
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Text(
-                              '${spot.likes} Likes',
-                              style: GoogleFonts.comfortaa(
-                                fontSize: 14,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ],
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  );
-                },
+                  ],
+                ),
               );
             }),
           ),
+
+
+
         ],
       ),
     );
   }
+}
+
+
+void showFeedbackModal(BuildContext context) {
+  final controller = Get.find<TouristSpotController>();
+  final spot = controller.selectedSpot.value;
+
+  if (spot == null) {
+    return;
+  }
+
+  final feedbacks = controller.getFeedbackForSpot(spot.id);
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, // Allows full-screen height modal
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return DraggableScrollableSheet(
+        initialChildSize: 0.5, // Start at 50% of screen height
+        minChildSize: 0.3, // Minimum height 30%
+        maxChildSize: 0.9, // Maximum height 90%
+        expand: false,
+        builder: (context, scrollController) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      textAlign: TextAlign.center,
+                      "Feedbacks",
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 28, color: Colors.black),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const Divider(),
+
+                // Feedback List
+                Expanded(
+                  child: feedbacks != null && feedbacks.isNotEmpty
+                      ? ListView.builder(
+                    controller: scrollController, // Allows smooth scrolling inside modal
+                    itemCount: feedbacks.length,
+                    itemBuilder: (context, index) {
+                      final feedback = feedbacks[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: ListTile(
+                          tileColor: Colors.grey[100],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          title: Text(
+                            feedback.fullName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(feedback.message),
+                        ),
+                      );
+                    },
+                  )
+                      : const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Text(
+                        "No feedback available.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
 }

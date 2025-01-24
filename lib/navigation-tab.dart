@@ -9,6 +9,8 @@ import 'package:lb_tour/screens/discover/discover.dart';
 import 'package:lb_tour/screens/home/home.dart';
 import 'package:lb_tour/screens/home/notification.dart';
 import 'package:lb_tour/screens/likes/likes.dart';
+import 'dart:io'; // Import for exit(0)
+import 'package:flutter/services.dart'; // For SystemNavigator.pop()
 import 'package:lb_tour/screens/weather/weather.dart';
 
 import 'ccontroller/booking_controller.dart';
@@ -111,7 +113,13 @@ class _TabNavigationState extends State<TabNavigation>
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton.icon(
-                        onPressed: () => Navigator.of(context).pop(true),
+                        onPressed: () {
+                          if (Platform.isAndroid) {
+                            SystemNavigator.pop(); // Proper exit for Android
+                          } else if (Platform.isIOS) {
+                            exit(0); // Force close for iOS
+                          }
+                        },
                         icon: const Icon(Icons.exit_to_app, color: Colors.white),
                         label: Text(
                           "Exit",
@@ -267,75 +275,47 @@ class _TabNavigationState extends State<TabNavigation>
                 AccountPage(selectedStatus: widget.selectedStatus),
               ],
             ),
-            bottomNavigationBar: Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: Container(
-                height: 60,
-                width: MediaQuery.of(context).size.width,
-                alignment: Alignment.bottomCenter,
-                child: Theme(
-                  data: Theme.of(context).copyWith(
-                    canvasColor: Colors.white,
-                    primaryColor: Colors.white,
-                    textTheme: Theme.of(context).textTheme.copyWith(
-                      bodySmall: GoogleFonts.roboto(color: Colors.black),
-                    ),
+            bottomNavigationBar: Container(
+              width: MediaQuery.of(context).size.width, // Ensures full width
+              child: BottomNavigationBar(
+                currentIndex: _selectedIndex,
+                onTap: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                    _tabController.animateTo(index);
+                  });
+                },
+                selectedItemColor: const Color.fromARGB(255, 14, 86, 170),
+                unselectedItemColor: Colors.black,
+                showSelectedLabels: true,
+                showUnselectedLabels: true,
+                type: BottomNavigationBarType.fixed, // Ensures all items are always visible
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(HugeIcons.strokeRoundedHome13, size: 24.0),
+                    label: "Home",
                   ),
-                  child: TabBar(
-                    controller: _tabController,
-                    onTap: (index) {
-                      setState(() {
-                        _selectedIndex = index;
-                      });
-                    },
-                    unselectedLabelColor: Colors.black,
-                    labelColor: const Color.fromARGB(255, 14, 86, 170),
-                    indicator: const UnderlineTabIndicator(
-                      borderSide: BorderSide(width: 2.0, color: Color.fromARGB(255, 14, 86, 170)),
-                      insets: EdgeInsets.symmetric(horizontal: 5),
-                    ),
-                    labelStyle: GoogleFonts.roboto(),
-                    tabs: const [
-                      Tab(
-                        icon: HugeIcon(
-                          icon: HugeIcons.strokeRoundedHome13,
-                          color: Colors.black,
-                        ),
-                        text: "Home",
-                      ),
-                      Tab(
-                        icon: HugeIcon(
-                          icon: HugeIcons.strokeRoundedDiscoverCircle,
-                          color: Colors.black,
-                        ),
-                        text: "Discover",
-                      ),
-                      Tab(
-                        icon: HugeIcon(
-                          icon: HugeIcons.strokeRoundedSunCloudAngledRain02,
-                          color: Colors.black,
-                        ),
-                        text: "Weather",
-                      ),
-                      Tab(
-                        icon: HugeIcon(
-                          icon: HugeIcons.strokeRoundedThumbsUp,
-                          color: Colors.black,
-                        ),
-                        text: "Top-Rated",
-                      ),
-                      Tab(
-                        icon: HugeIcon(
-                          icon: Icons.person_3,
-                          color: Colors.black,
-                        ),
-                        text: "Account",
-                      ),
-                    ],
+                  BottomNavigationBarItem(
+                    icon: Icon(HugeIcons.strokeRoundedDiscoverCircle, size: 24.0),
+                    label: "Discover",
                   ),
-                ),
+                  BottomNavigationBarItem(
+                    icon: Icon(HugeIcons.strokeRoundedSunCloudAngledRain02, size: 24.0),
+                    label: "Weather",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(HugeIcons.strokeRoundedThumbsUp, size: 24.0),
+                    label: "Top-Rated",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person_3, size: 24.0),
+                    label: "Account",
+                  ),
+                ],
               ),
             ),
+
+
           ),
         ),
       ),

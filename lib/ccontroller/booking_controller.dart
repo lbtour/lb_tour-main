@@ -115,8 +115,5 @@ class BookingController extends GetxController {
     }
   }
 
-  /// Update the selected activity image
-  void updateSelectedActivityImage(String imageUrl) {
-    selectedActivityImage.value = imageUrl;
-  }
+
 }

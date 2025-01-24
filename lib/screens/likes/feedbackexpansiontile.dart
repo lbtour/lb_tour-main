@@ -29,13 +29,13 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
           children: [
             Icon(
               isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              size: 24,
+              size: 20,
               color: Colors.transparent, // Customize color as needed
             ),
             const SizedBox(width: 8), // Space between text and arrow
             Text(
               isExpanded ? "Hide Feedback" : "View Feedbacks",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(width: 8), // Space between text and arrow
             Icon(
@@ -67,7 +67,7 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
             : [
           const Center(
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(5.0),
               child: Text(
                 "No feedback available.",
                 textAlign: TextAlign.center,

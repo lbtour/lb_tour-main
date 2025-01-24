@@ -11,10 +11,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
+  Get.lazyPut(()=>AuthenticationRepository());
 
-
-  // Register AuthenticationRepository in GetX
-  Get.put(AuthenticationRepository());
 
   // Initialize BookingStatusNotifier globally (optional)
   Get.put(BookingStatusNotifier());

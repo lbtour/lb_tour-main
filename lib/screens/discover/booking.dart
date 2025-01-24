@@ -35,7 +35,7 @@ class _BookingScreenState extends State<BookingScreen> {
   final ValueNotifier<DateTime?> _selectedDateNotifier = ValueNotifier<DateTime?>(null);
   final ValueNotifier<String> _availableHourNotifier = ValueNotifier<String>("Loading...");
   final ValueNotifier<List<Map<String, String>>> _activitiesNotifier = ValueNotifier<List<Map<String, String>>>([]);
-  Map<DateTime, String> _userBookings = {};
+
 
   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -46,6 +46,10 @@ class _BookingScreenState extends State<BookingScreen> {
     _currentPage = widget.initialPage;
     _fetchUserBookings();
     _fetchAvailableHour();
+
+
+    // Assign ScrollController to ActivityController
+    activityController.scrollController = ScrollController();
   }
 
   Future<void> _fetchUserBookings() async {
@@ -362,11 +366,10 @@ class _BookingScreenState extends State<BookingScreen> {
     ActivitiesPage(
       spot: widget.spot,
       onActivitySelected: (String selectedActivityImage) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          setState(() {
-            _getDynamicContent();
-          });
-        });
+        final ActivityController activityController = Get.find<ActivityController>();
+        print("onActivitySelected() triggered with image: $selectedActivityImage");
+
+        activityController.updateSelectedActivity(0, selectedActivityImage); // Trigger activity update
       },
     ),
   ];
@@ -390,23 +393,29 @@ class _BookingScreenState extends State<BookingScreen> {
               size: 24.0),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _getDynamicContent(),
-            const SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      body: GetBuilder<ActivityController>(
+        builder: (controller) {
+          return SingleChildScrollView(
+            controller: controller.scrollController,
+            child: Column(
               children: [
-                _navigationButton('Overview', 0),
-                _navigationButton('Booking', 1),
-                _navigationButton('Activities', 2),
+                _getDynamicContent(),
+                const SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _navigationButton('Overview', 0),
+                    _navigationButton('Booking', 1),
+                    _navigationButton('Activities', 2),
+                  ],
+                ),
+                pages[_currentPage],
               ],
             ),
-            pages[_currentPage],
-          ],
-        ),
+          );
+        },
       ),
+
     );
   }
 
